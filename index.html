@@ -5,10 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OS Design</title>
-    <script type="module" crossorigin src="/assets/index-DbKjhZjc.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BJX90Eey.css">
+    <script type="module" crossorigin src="/assets/index-ByN_pzva.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-xZzpUjBH.css">
   </head>
   <body>
+    <script>
+      // Immediately apply theme class based on localStorage before React loads
+      (function() {
+        const theme = localStorage.getItem('themePreference'); // Must match SiteSettingsContext key
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          // Optional: explicitly add 'light' or remove 'dark' if needed,
+          // but Tailwind usually defaults to light styles without a class.
+          // document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
     <div id="root"></div>
   </body>
 </html>
