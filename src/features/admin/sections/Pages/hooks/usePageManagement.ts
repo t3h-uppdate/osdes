@@ -150,6 +150,41 @@ export const usePageManagement = () => {
 
   // Remove handleMove, handleMoveUp, handleMoveDown as ordering is based on created_at
 
+  // --- Toggle Publish Status ---
+  const handleTogglePublish = useCallback(async (id: string, currentState: boolean) => {
+    if (!id) {
+      showToast("Cannot toggle publish status: Invalid ID.", 'error');
+      return;
+    }
+    if (!supabase) {
+      showToast("Error: Supabase client is not initialized.", 'error');
+      return;
+    }
+
+    const newState = !currentState;
+    const actionText = newState ? 'Publishing' : 'Unpublishing';
+    const pageTitle = pages.find(p => p.id === id)?.title || id;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from(PAGES_TABLE)
+        .update({ is_published: newState })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      showToast(`Page "${pageTitle}" ${newState ? 'published' : 'unpublished'} successfully!`, 'success');
+      fetchPages(); // Refetch to update the list UI
+    } catch (err: any) {
+      console.error(`Error ${actionText.toLowerCase()} page:`, err);
+      showToast(`Failed to ${actionText.toLowerCase()} page. Check console.`, 'error');
+      setIsLoading(false); // Ensure loading stops on error
+    }
+    // fetchPages will set loading to false on success/failure
+  }, [supabase, pages, showToast, fetchPages]);
+
+
   return {
     pages,
     isLoading,
@@ -159,6 +194,7 @@ export const usePageManagement = () => {
     handleDelete,
     startEditing,
     resetForm,
+    handleTogglePublish, // Export the new handler
     // Removed handleMoveUp, handleMoveDown
   };
 };

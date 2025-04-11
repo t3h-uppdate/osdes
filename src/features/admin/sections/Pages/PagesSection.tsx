@@ -15,8 +15,9 @@ const PagesSection: React.FC = () => {
     handleDelete,
     startEditing,
     resetForm,
-    handleMoveUp,
-    handleMoveDown,
+    // handleMoveUp, // Removed as ordering is handled by created_at
+    // handleMoveDown, // Removed
+    handleTogglePublish, // Get the new handler from the hook
   } = usePageManagement();
 
   return (
@@ -53,8 +54,9 @@ const PagesSection: React.FC = () => {
                 isLoading={isLoading}
                 onEdit={startEditing}
                 onDelete={handleDelete}
-                onMoveUp={handleMoveUp}
-                onMoveDown={handleMoveDown}
+                // onMoveUp={handleMoveUp} // Removed
+                // onMoveDown={handleMoveDown} // Removed
+                onTogglePublish={handleTogglePublish} // Pass the handler down
               />
             ))}
           </ul>
