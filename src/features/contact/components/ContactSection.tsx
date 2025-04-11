@@ -55,12 +55,17 @@ function ContactSection({ /* isDarkMode, */ contactTranslations, contactDescript
             email: formData.email // Included for template compatibility if needed
         };
 
-        // Replace with your actual EmailJS service ID, template ID, and user ID
-        const SERVICE_ID = 'service_bdj14o3';
-        const TEMPLATE_ID = 'template_2e2nikq';
-        const USER_ID = 'UBLU57PsLej7OB6PR';
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+        const userId = import.meta.env.VITE_EMAILJS_USER_ID;
 
-        emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, USER_ID)
+        if (!serviceId || !templateId || !userId) {
+            console.error('EmailJS environment variables are not set correctly in .env file.');
+            showToast('Configuration error. Unable to send message.', 'error');
+            return;
+        }
+
+        emailjs.send(serviceId, templateId, templateParams, userId)
             .then((response) => {
                 console.log('SUCCESS!', response.status, response.text);
                 // Use the correct translation key from the prop
