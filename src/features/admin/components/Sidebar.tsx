@@ -39,26 +39,31 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-16 h-[calc(100vh-4rem)] bg-gray-800 text-white transition-transform duration-300 ease-in-out z-30 md:translate-x-0 md:transition-all md:duration-300
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-lg transition-transform duration-300 ease-in-out z-20 border-r border-gray-200 dark:border-gray-700 md:translate-x-0 md:transition-all md:duration-300
           ${isMobile ? (isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64') : (isDesktopSidebarCollapsed ? 'w-20' : 'w-64')}
         `}
         aria-label="Main Navigation"
       >
-        <nav className="p-4 overflow-y-auto h-full">
+        {/* Add padding to the nav container, not individual items */}
+        <nav className="py-4 overflow-y-auto h-full">
           {navItems.map((item) => (
             <button
               key={item.tab}
               onClick={() => onTabClick(item.tab)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center px-4 py-3 transition-colors duration-150 ease-in-out group ${
                 activeTab === item.tab
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`}
-              aria-current={activeTab === item.tab ? 'page' : undefined} // Indicate active page
+                  ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 font-medium' // Active state
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' // Default & Hover state
+              } ${isDesktopSidebarCollapsed && !isMobile ? 'justify-center' : 'space-x-3'}`} // Center icon when collapsed
+              aria-current={activeTab === item.tab ? 'page' : undefined}
+              title={isDesktopSidebarCollapsed && !isMobile ? item.label : undefined} // Show tooltip when collapsed
             >
-              {item.icon}
-              {/* Show label only when sidebar is expanded */}
-              <span className={`${(isMobile && isSidebarOpen) || (!isMobile && !isDesktopSidebarCollapsed) ? 'inline' : 'hidden'}`}>
+              {/* Icon styling */}
+              <span className={`flex-shrink-0 ${activeTab === item.tab ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
+                {item.icon}
+              </span>
+              {/* Label styling and visibility */}
+              <span className={`flex-1 text-left ${(isMobile && isSidebarOpen) || (!isMobile && !isDesktopSidebarCollapsed) ? 'inline' : 'hidden'}`}>
                 {item.label}
               </span>
             </button>

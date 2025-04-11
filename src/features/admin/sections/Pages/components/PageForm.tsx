@@ -46,10 +46,10 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border rounded shadow-sm bg-white space-y-4">
-      <h3 className="text-lg font-medium">{initialData?.id ? 'Edit Page' : 'Add New Page'}</h3>
+    <form onSubmit={handleSubmit} className="p-4 border dark:border-gray-600 rounded shadow-sm bg-white dark:bg-gray-800 space-y-4">
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{initialData?.id ? 'Edit Page' : 'Add New Page'}</h3>
       <div>
-        <label htmlFor="pageTitle" className="block text-sm font-medium text-gray-700">Title</label>
+        <label htmlFor="pageTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
         <input
           type="text"
           id="pageTitle"
@@ -57,11 +57,11 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
           onChange={(e) => setPageTitle(e.target.value)}
           required
           placeholder="Enter page title" // Added placeholder
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         />
       </div>
       <div>
-        <label htmlFor="pageSlug" className="block text-sm font-medium text-gray-700">Slug (URL Path, e.g., 'about-us')</label>
+        <label htmlFor="pageSlug" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Slug (URL Path, e.g., 'about-us')</label>
         <input
           type="text"
           id="pageSlug"
@@ -69,17 +69,20 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
           onChange={handleSlugChange}
           required
           placeholder="e.g., about-us, contact-page" // Added placeholder
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           pattern="^[a-z0-9-]+$"
           title="Slug can only contain lowercase letters, numbers, and hyphens."
         />
       </div>
+      {/* Apply dark mode label color. Quill editor styling might need theme prop or CSS overrides */}
       <div className="relative quill-editor-wrapper">
-        <label htmlFor="pageContent" className="block text-sm font-medium text-gray-700">Content</label>
+        <label htmlFor="pageContent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
         <QuillEditor
           value={pageContent}
           onChange={setPageContent}
           placeholder="Enter page content here..."
+          // Consider passing a theme prop to QuillEditor if it supports it
+          // theme={currentTheme === 'dark' ? 'snow' : 'bubble'} // Example
         />
       </div>
       <div className="flex justify-end space-x-3 pt-4">
@@ -88,7 +91,7 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50"
           >
             Cancel Edit
           </button>
@@ -96,7 +99,7 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50"
         >
           {isLoading ? 'Saving...' : (initialData?.id ? 'Update Page' : 'Add Page')}
         </button>

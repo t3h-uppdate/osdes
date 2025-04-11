@@ -27,6 +27,10 @@ interface EnglishTranslations {
     getStarted: string;
   };
   // generalInfo removed
+  blog: {
+    title: string; // Keep title if used as section header
+    // description removed
+  };
   // hero removed
   about: {
     title: string; // Keep title if used as section header

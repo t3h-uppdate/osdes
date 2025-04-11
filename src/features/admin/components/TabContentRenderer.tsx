@@ -37,45 +37,65 @@ interface TabContentRendererProps {
   handleDeleteItem: (path: (string | number)[], index?: number) => void;
 }
 
+// Helper function to create styled stat cards
+const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; description: string; iconBgColor: string; iconTextColor: string }> =
+  ({ title, value, icon, description, iconBgColor, iconTextColor }) => (
+    <div className="bg-white dark:bg-gray-700 p-5 rounded-lg shadow border border-gray-200 dark:border-gray-600 flex items-center space-x-4">
+      <div className={`p-3 rounded-full ${iconBgColor} ${iconTextColor}`}>
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{title}</h3>
+        <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{value}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+      </div>
+    </div>
+);
+
+
 const renderDashboardContent = () => {
+  // Define colors for icons
+  const iconColors = {
+    pageViews: { bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-600 dark:text-blue-300' },
+    totalPages: { bg: 'bg-green-100 dark:bg-green-900', text: 'text-green-600 dark:text-green-300' },
+    comments: { bg: 'bg-purple-100 dark:bg-purple-900', text: 'text-purple-600 dark:text-purple-300' },
+    averageRating: { bg: 'bg-yellow-100 dark:bg-yellow-900', text: 'text-yellow-600 dark:text-yellow-300' },
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {/* Page Views */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-700 font-semibold">Page Views</h3>
-          <Eye className="text-blue-500" size={20} />
-        </div>
-        <p className="text-2xl font-bold text-gray-900">{stats.pageViews}</p>
-        <p className="text-sm text-gray-500 mt-2">Last 30 days</p>
-      </div>
-      {/* Total Pages */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-700 font-semibold">Total Pages</h3>
-          <FileText className="text-green-500" size={20} />
-        </div>
-        <p className="text-2xl font-bold text-gray-900">{stats.totalPages}</p>
-        <p className="text-sm text-gray-500 mt-2">Published content</p>
-      </div>
-      {/* Comments */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-700 font-semibold">Comments</h3>
-          <MessageSquare className="text-purple-500" size={20} />
-        </div>
-        <p className="text-2xl font-bold text-gray-900">{stats.comments}</p>
-        <p className="text-sm text-gray-500 mt-2">Awaiting response</p>
-      </div>
-      {/* Average Rating */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-700 font-semibold">Average Rating</h3>
-          <Star className="text-yellow-500" size={20} />
-        </div>
-        <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
-        <p className="text-sm text-gray-500 mt-2">Based on feedback</p>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+      <StatCard
+        title="Page Views"
+        value={stats.pageViews}
+        icon={<Eye size={20} />}
+        description="Last 30 days"
+        iconBgColor={iconColors.pageViews.bg}
+        iconTextColor={iconColors.pageViews.text}
+      />
+      <StatCard
+        title="Total Pages"
+        value={stats.totalPages}
+        icon={<FileText size={20} />}
+        description="Published content"
+        iconBgColor={iconColors.totalPages.bg}
+        iconTextColor={iconColors.totalPages.text}
+      />
+      <StatCard
+        title="Comments"
+        value={stats.comments}
+        icon={<MessageSquare size={20} />}
+        description="Awaiting response"
+        iconBgColor={iconColors.comments.bg}
+        iconTextColor={iconColors.comments.text}
+      />
+      <StatCard
+        title="Average Rating"
+        value={stats.averageRating}
+        icon={<Star size={20} />}
+        description="Based on feedback"
+        iconBgColor={iconColors.averageRating.bg}
+        iconTextColor={iconColors.averageRating.text}
+      />
     </div>
   );
 };
@@ -94,12 +114,14 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-10">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      // Improved loading spinner centered within the content area
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
+  // Render dashboard if no tab or 'dashboard' is selected
   if (!activeTab || activeTab === 'dashboard') {
     return renderDashboardContent();
   }
@@ -117,14 +139,10 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
   // Handle generalInfo explicitly here
   if (activeTab === 'generalInfo') {
     // No need for isValidTranslationKey check for this specific tab
-    const staticTabTitle = getStaticSectionName(activeTab);
+    // const staticTabTitle = getStaticSectionName(activeTab); // Title is handled by AdminDashboard now
     return (
-      <>
-        <h3 className="text-xl font-semibold mb-4 text-gray-700 capitalize">
-          {staticTabTitle}
-        </h3>
-        {/* Render GeneralInfoSection directly when activeTab is 'generalInfo' */}
-        <GeneralInfoSection
+      // Return the GeneralInfoSection directly, wrapped in a fragment if needed (though likely not here)
+      <GeneralInfoSection
           siteSettings={siteSettings}
           handleSiteSettingChange={handleSiteSettingChange}
           translations={translations}
@@ -133,27 +151,24 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
           setEditingPath={setEditingPath}
           getStaticSectionName={getStaticSectionName}
         />
-      </>
+      // No fragment needed here as it's a single component return
     );
   }
 
-  // Check if the activeTab corresponds to *other* sections in translations
-  if (isValidTranslationKey(activeTab)) { // Now activeTab cannot be 'generalInfo' here
-    const staticTabTitle = getStaticSectionName(activeTab);
+  // Check if the activeTab corresponds to *other* sections that might use renderFields
+  if (isValidTranslationKey(activeTab)) { // Now activeTab cannot be 'generalInfo', 'projects', 'services' etc. here
+    // const staticTabTitle = getStaticSectionName(activeTab); // Title handled by AdminDashboard
     return (
+      // Return within a Fragment as there's conditional logic inside
       <>
-        <h3 className="text-xl font-semibold mb-4 text-gray-700 capitalize">
-          {staticTabTitle}
-        </h3>
-        {/* Removed the incorrect check for activeTab === 'projects' inside the generalInfo block */}
+        {/* Render specific sections first */}
         {activeTab === 'projects' ? (
           <ProjectsSection />
         ) : activeTab === 'services' ? (
           <ServicesSection />
-        ) : /* No 'generalInfo' case needed here anymore */
-          // Fallback rendering logic for remaining valid translation keys
-          translations.en[activeTab] ? ( // Check existence just in case
-            renderFields(
+        ) : // Fallback rendering logic for remaining valid translation keys using renderFields
+        translations.en[activeTab] ? ( // Check existence just in case
+          renderFields(
               translations.en[activeTab], // The data object
               [activeTab], // Base path
               handleTranslationsChange, // Handler
@@ -164,12 +179,17 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
             )
           ) : null // Fallback renders null if key doesn't exist in translations
         }
-      </>
+      </> // Ensure Fragment is closed correctly
     );
   }
 
-  // Fallback for invalid tabs
-  return <p className="text-red-500">Error: Invalid tab '{activeTab}' selected.</p>;
+  // Fallback for invalid or unhandled tabs
+  return (
+    <div className="p-6 bg-red-50 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg">
+      <p className="text-red-700 dark:text-red-200 font-medium">Error: Invalid or unhandled tab '{activeTab}' selected.</p>
+      <p className="text-sm text-red-600 dark:text-red-300 mt-1">Please check the navigation or component logic.</p>
+    </div>
+  );
 };
 
 export default TabContentRenderer;

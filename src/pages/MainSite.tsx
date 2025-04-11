@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link
-import { Home, Mail, Menu, X, ArrowRight, Phone, MapPin, Moon, Sun } from 'lucide-react';
+import { Home, Mail, ArrowRight, Phone, MapPin } from 'lucide-react'; // Removed Menu, X, Moon, Sun
 import { useNotifications } from '../contexts/NotificationContext';
 import { useSocialLinks, iconComponents } from '../hooks/useSocialLinks'; // Import the hook and icons
 import { useTranslations } from '../hooks/useTranslations'; // Keep for remaining translations
+import Navigation from '../components/layout/Navigation'; // Import the new Navigation component
 import { useSiteSettings } from '../contexts/SiteSettingsContext';
 import ServicesSection from '../features/services/components/ServicesSection';
 import ContactSection from '../features/contact/components/ContactSection';
@@ -13,17 +14,17 @@ import { useFetchProjects } from '../features/projects/hooks/useFetchProjects';
 import BlogSection from '../features/blog/components/BlogSection'; // Import BlogSection
 import { useDynamicPages } from '../hooks/useDynamicPages'; // Import the hook for dynamic pages
 
-// Language type can be inferred from useTranslations hook if needed, or kept simple
+// Language type
 type Language = 'en' | 'sv' | 'ar';
 
 function MainSite() {
   useNotifications();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Keep for mobile menu toggle
+  // const [isDarkMode, setIsDarkMode] = useState(false); // Remove local dark mode state
   const [language, setLanguage] = useState<Language>('en');
 
-  // Use the hook to get translations (for parts not in site_settings)
-  const { t, isLoading: isLoadingTranslations, error: translationsError } = useTranslations(language);
+  // Use the hook to get translations
+  const { t: translationsData, isLoading: isLoadingTranslations, error: translationsError } = useTranslations(language);
   // Use the new hook to get site settings
   const settings = useSiteSettings();
   // Use the hook to get social links
@@ -38,6 +39,9 @@ function MainSite() {
   // Combine error states (prioritize showing an error)
   const error = translationsError || socialLinksError || projectsError || errorPages;
 
+  // The useTranslations hook returns the translations for the current language directly.
+  const t = translationsData;
+
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value as Language);
@@ -46,7 +50,8 @@ function MainSite() {
   // Removed staticT, displayData, servicesList, uiStrings, heroData derivations
 
   // Loading indicator (consider checking settings loading state if available)
-  if (isLoading) {
+  // Also check if settings object itself is loaded if useSiteSettings provides that
+  if (isLoading || !settings) { // Added check for settings object
     return <div className="min-h-screen flex items-center justify-center">Loading site content...</div>;
   }
 
@@ -56,103 +61,54 @@ function MainSite() {
     return <div className="min-h-screen flex items-center justify-center text-red-500">Error loading site data: {errorMessage}</div>;
   }
 
+  // If settings are loaded but translations are not yet (edge case), show loading or default UI
+  // This prevents errors trying to access 't' before it's ready
+  // if (!t) {
+  //   return <div className="min-h-screen flex items-center justify-center">Loading translations...</div>;
+  // }
+
+
+  // Remove isDarkMode check from main div class - context handles this on <html>
+  // Add base dark mode styles here
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} ${language === 'ar' ? 'rtl' : ''}`}>
-      {/* Navigation */}
-      <nav className={`shadow-sm ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Home className={`h-8 w-8 ${isDarkMode ? 'text-white' : 'text-blue-600'}`} />
-              <span className="ml-2 text-xl font-semibold">OS Design</span>
-            </div>
+    <div className={`min-h-screen ${language === 'ar' ? 'rtl' : ''} bg-white text-gray-900 dark:bg-gray-900 dark:text-white`}>
+      {/* Use the new Navigation component */}
+      {/* Ensure 't' and 'settings' are available before rendering Navigation */}
+      {t && settings && (
+        <Navigation
+          // isDarkMode={isDarkMode} // Remove prop
+          // setIsDarkMode={setIsDarkMode} // Remove prop
+          language={language}
+          handleLanguageChange={handleLanguageChange}
+          settings={settings}
+          t={t}
+          dynamicPages={dynamicPages}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+        />
+      )}
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              {/* Use settings for site title, t for others */}
-              <a href="#home" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.site_title}</a>
-              <a href="#services" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.services?.title}</a>
-              <a href="#projects" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.ui?.projects}</a>
-              {/* Dynamic Page Links */}
-              {dynamicPages.map(page => (
-                <Link key={page.id} to={`/${page.slug}`} className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {page.title}
-                </Link>
-              ))}
-              <a href="#about" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.about_description ? 'About' : t.about?.title}</a>
-              <a href="#contact" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.contact?.title}</a>
-            </div>
-
-            {/* Language Selector - Note: SiteSettings are not multilingual in this setup */}
-            <select
-              onChange={handleLanguageChange}
-              value={language}
-              className={`text-gray-700 hover:text-blue-600 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-            >
-              <option value="en">English</option>
-              <option value="sv">Svenska</option>
-              <option value="ar">العربية</option>
-            </select>
-
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="text-gray-700 hover:text-blue-600"
-            >
-              {isDarkMode ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
-            </button>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-700 hover:text-blue-600"
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <a href="#home" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.site_title}</a>
-              <a href="#services" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.services?.title}</a>
-              <a href="#projects" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.ui?.projects}</a>
-              {/* Dynamic Page Links */}
-              {dynamicPages.map(page => (
-                <Link key={page.id} to={`/${page.slug}`} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {page.title}
-                </Link>
-              ))}
-              <a href="#about" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.about_description ? 'About' : t.about?.title}</a>
-              <a href="#contact" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.contact?.title}</a>
-            </div>
-          </div>
-        )}
-      </nav>
-
-      {/* Hero Section */}
+      {/* Hero Section - Add dark mode text color if needed, background is handled by main div */}
       <div id="home" className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+          {/* Adjust background for the text area if needed, or let main background show through */}
+          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 bg-white dark:bg-gray-900">
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 {/* Use settings object */}
-                <h1 className="text-4xl tracking-tight font-extrabold sm:text-5xl md:text-6xl">
+                {/* Text color should inherit from main div, but can be overridden */}
+                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
                   <span className="block">{settings.hero_title}</span>
                   {/* Conditionally render title2 */}
-                  {settings.hero_title2 && <span className="block text-blue-600">{settings.hero_title2}</span>}
+                  {settings.hero_title2 && <span className="block text-blue-600 dark:text-blue-400">{settings.hero_title2}</span>}
                 </h1>
-                <p className="mt-3 text-base sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                <p className="mt-3 text-base text-gray-500 dark:text-gray-300 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                   {settings.hero_subtitle}
                 </p>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">
-                    {/* Use settings object */}
-                    <a href="#contact" className={`w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white ${isDarkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} md:py-4 md:text-lg md:px-10`}>
+                    {/* Use settings object - Rely on global dark mode class for styling */}
+                    <a href="#contact" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 md:py-4 md:text-lg md:px-10">
                       {settings.hero_cta_button_text}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </a>
@@ -166,42 +122,42 @@ function MainSite() {
       </div>
 
       {/* Services Section (using the updated component) */}
+      {/* Check if t exists before accessing properties */}
       <ServicesSection
-        isDarkMode={isDarkMode}
+        // isDarkMode={isDarkMode} // Remove prop
         // Pass optional titles from translations; component has defaults
-        sectionTitle={t.services?.title}
-        sectionSubtitle={t.ui?.everythingYouNeed}
+        sectionTitle={t?.services?.title}
+        sectionSubtitle={t?.ui?.everythingYouNeed}
       />
 
       {/* Projects Section */}
+      {/* Check if t exists before accessing properties */}
       <ProjectsSection
         projects={projects}
-        title={t.ui?.projects || 'Projects'} // Use translation or default
-        isDarkMode={isDarkMode}
+        title={t?.projects?.title || 'Projects'} // Corrected translation key and added optional chaining
+        // isDarkMode={isDarkMode} // Remove prop
       />
 
       {/* Blog Section */}
       <BlogSection dynamicPages={dynamicPages} />
 
-      {/* About Section */}
-      <div id="about" className={`py-12 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+      {/* About Section - Rely on global dark mode class for styling */}
+      <div id="about" className="py-12 bg-gray-50 dark:bg-gray-800"> {/* Use Tailwind dark: prefix */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-8"> {/* Added margin bottom */}
             {/* Use settings object - maybe just 'About Us' static text? */}
-            <h2 className={`text-base font-semibold tracking-wide uppercase ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>About Us</h2>
+            <h2 className="text-base font-semibold tracking-wide uppercase text-blue-600 dark:text-blue-400">About Us</h2> {/* Use Tailwind dark: prefix */}
           </div>
           <p className="mt-3 text-base sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
             {settings.about_description} {/* Use settings */}
           </p>
-            {/* Misplaced closing div removed here */}
-
             {/* Social Links Section */}
             {socialLinks.length > 0 && (
               <div className="mt-12 pt-12 border-t border-gray-200 dark:border-gray-700"> {/* Add separator */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="lg:text-center mb-6"> {/* Add margin bottom */}
                     {/* Use links title from ui section */}
-                    <h2 className={`text-base font-semibold tracking-wide uppercase ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{t.ui?.links}</h2>
+                    <h2 className="text-base font-semibold tracking-wide uppercase text-blue-600 dark:text-blue-400">{t?.ui?.links}</h2> {/* Use Tailwind dark: prefix */}
                   </div>
                   <div className="flex justify-center space-x-6">
                     {/* Render dynamic social links */}
@@ -214,7 +170,7 @@ function MainSite() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={link.name} // Add aria-label for accessibility
-                    className={`hover:text-blue-400 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-400 transition-colors" // Use Tailwind dark: prefix
                   >
                     <IconComponent size={24} />
                   </a>
@@ -228,54 +184,46 @@ function MainSite() {
     </div> {/* Correct closing div for #about section */}
 
       {/* Contact Section (using the new component) */}
-      {/* Contact Section (using the new component) */}
       {/* Ensure t.contact exists before passing */}
-      {t.contact && (
+      {t?.contact && (
         <ContactSection
-          isDarkMode={isDarkMode}
+          // isDarkMode={isDarkMode} // Remove prop
           // Pass translations directly from the hook, including UI strings
           contactTranslations={t.contact}
-          contactDescriptionTranslation={t.ui?.contactDescription || ''} // Pass contactDescription from ui section
+          contactDescriptionTranslation={t?.ui?.contactDescription || ''} // Pass contactDescription from ui section
         />
       )}
 
-      {/* Footer */}
-      <footer className={`py-12 px-4 sm:px-6 lg:px-8 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-800'}`}>
+      {/* Footer - Rely on global dark mode class for styling */}
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-800"> {/* Footer is always dark */}
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center">
                 <Home className="h-8 w-8 text-white" />
-                <span className="ml-2 text-xl font-semibold text-white">OS Design</span>
+                <span className="ml-2 text-xl font-semibold text-white">{settings.site_title || 'OS Design'}</span> {/* Use site_title */}
               </div>
               <p className="mt-4 text-gray-400">
-                Building better digital experiences for forward-thinking businesses.
+                {'Building better digital experiences for forward-thinking businesses.'} {/* Replaced non-existent settings.footer_description */}
               </p>
             </div>
             <div>
               {/* Use quickLinks title from ui section */}
-              <h3 className="text-white font-semibold mb-4">{t.ui?.quickLinks}</h3>
+              <h3 className="text-white font-semibold mb-4">{t?.ui?.quickLinks}</h3>
               <ul className="space-y-2">
                  {/* Use home title from ui section */}
                 <li><a href="#home" className="text-gray-400 hover:text-white">{settings.site_title}</a></li>
-                <li><a href="#services" className="text-gray-400 hover:text-white">{t.services?.title}</a></li>
-                <li><a href="#projects" className="text-gray-400 hover:text-white">{t.ui?.projects}</a></li>
-                {/* Dynamic Page Links in Footer */}
-                {dynamicPages.map(page => (
-                  <li key={page.id}>
-                    <Link to={`/${page.slug}`} className="text-gray-400 hover:text-white">
-                      {page.title}
-                    </Link>
-                  </li>
-                ))}
-                <li><a href="#about" className="text-gray-400 hover:text-white">{settings.about_description ? 'About' : t.about?.title}</a></li>
-                <li><a href="#contact" className="text-gray-400 hover:text-white">{t.contact?.title}</a></li>
-                <li><a href="/login" className="text-gray-400 hover:text-white">Login</a></li>
+                <li><a href="#services" className="text-gray-400 hover:text-white">{t?.services?.title}</a></li>
+                <li><a href="#projects" className="text-gray-400 hover:text-white">{t?.projects?.title}</a></li> {/* Corrected key */}
+                <li><a href="#blog" className="text-gray-400 hover:text-white">{t?.ui?.blog}</a></li>
+                <li><a href="#about" className="text-gray-400 hover:text-white">{settings.about_description ? 'About' : t?.about?.title}</a></li>
+                <li><a href="#contact" className="text-gray-400 hover:text-white">{t?.contact?.title}</a></li>
+                <li><a href="/login" className="text-gray-400 hover:text-white">Login</a></li> {/* Consider making Login translatable */}
               </ul>
             </div>
             <div>
                {/* Use contactInfo title from ui section (keep t) */}
-              <h3 className="text-white font-semibold mb-4">{t.ui?.contactInfo}</h3>
+              <h3 className="text-white font-semibold mb-4">{t?.ui?.contactInfo}</h3>
               <ul className="space-y-2">
                  {/* Use settings for phone/address/mail */}
                 <li className="flex items-center text-gray-400">

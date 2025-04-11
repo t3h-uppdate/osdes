@@ -208,12 +208,12 @@ const SocialLinksSection: React.FC = () => {
   };
 
   return (
-    // Removed dark mode classes, added light mode defaults
-    <div className="p-4 md:p-6 bg-white rounded-lg shadow-lg text-gray-800">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-900">Manage Social Links</h2>
+    // Apply dark mode to the main container
+    <div className="p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-gray-800 dark:text-gray-200">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Manage Social Links</h2>
 
-      {isLoading && <p className="text-center text-gray-500">Loading links...</p>}
-      {/* TODO: Add error display if needed */}
+      {isLoading && <p className="text-center text-gray-500 dark:text-gray-400">Loading links...</p>}
+      {/* TODO: Add styled error display if needed */}
 
       {/* Add/Edit Form */}
       {(isAdding || editingLinkId) && (
@@ -228,9 +228,9 @@ const SocialLinksSection: React.FC = () => {
 
       {/* Add New Link Button */}
       {!isAdding && !editingLinkId && !isLoading && (
-        <button // Adjusted button style for light background
+        <button // Apply dark mode styles to button
           onClick={() => { setIsAdding(true); setEditingLinkId(null); setCurrentEditData(null); }}
-          className="mb-6 flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md"
+          className="mb-6 flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
           <PlusCircle size={18} /> Add New Link
         </button>
@@ -239,8 +239,8 @@ const SocialLinksSection: React.FC = () => {
       {/* Links List */}
       {!isLoading && links.length > 0 && (
         <div className="space-y-3">
-          {/* Header Row - Adjusted for light theme */}
-          <div className="hidden md:grid md:grid-cols-12 gap-4 bg-gray-100 border-b border-gray-300 rounded-t-lg p-3 font-semibold text-gray-600 items-center sticky top-0 z-10">
+          {/* Header Row - Apply dark mode styles */}
+          <div className="hidden md:grid md:grid-cols-12 gap-4 bg-gray-100 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600 rounded-t-lg p-3 font-semibold text-gray-600 dark:text-gray-300 items-center sticky top-0 z-10">
             <div className="col-span-1 text-center">Order</div>
             <div className="col-span-1 text-center">Icon</div>
             <div className="col-span-3">Name</div>
@@ -265,9 +265,9 @@ const SocialLinksSection: React.FC = () => {
         </div>
       )}
 
-      {/* Empty State - Adjusted for light theme */}
+      {/* Empty State - Apply dark mode styles */}
       {!isLoading && links.length === 0 && !isAdding && (
-         <div className="text-center text-gray-500 mt-6 p-6 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+         <div className="text-center text-gray-500 dark:text-gray-400 mt-6 p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
            <p className="font-medium">No social links found.</p>
            <p className="text-sm mt-1">Click "Add New Link" above to get started.</p>
          </div>

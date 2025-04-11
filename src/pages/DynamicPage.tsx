@@ -1,70 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react'; // Removed useState
 import { Link, useParams, useLocation } from 'react-router-dom';
-import supabase from '../config/supabaseConfig'; // Import Supabase client
-import { Page } from '../features/admin/sections/Pages/types'; // Import the Page type
+// Supabase client import removed, handled by the hook
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles to apply formatting
 import { useTranslations } from '../hooks/useTranslations';
-
-const PAGES_TABLE = 'pages';
+import { useDynamicPageData } from '../hooks/useDynamicPageData'; // Import the custom hook
+import { format } from 'date-fns'; // Import date-fns format function
+import { Helmet } from 'react-helmet-async'; // Import Helmet
+import DOMPurify from 'dompurify'; // Import DOMPurify
+import DynamicPageSkeleton from './DynamicPageSkeleton'; // Import the skeleton component
+// Skeleton imports removed, handled by DynamicPageSkeleton
+// Page type import removed, handled by the hook
 
 // Component to render dynamic page content fetched by slug
 const DynamicPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>(); // Get slug from URL params
   const location = useLocation();
-  const [page, setPage] = useState<Page | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { t, isLoading: isLoadingTranslations, error: translationsError } = useTranslations('en'); // Keep translations for footer etc.
-
-  useEffect(() => {
-    const fetchPage = async () => {
-      if (!slug) {
-        setError("No page slug provided.");
-        setIsLoading(false);
-        return;
-      }
-      if (!supabase) {
-        setError("Supabase client not available.");
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-      try {
-        const { data, error: dbError } = await supabase
-          .from(PAGES_TABLE)
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true) // Ensure only published pages are fetched
-          .single(); // Expect only one page per slug
-
-        if (dbError) {
-          // Handle case where the page is not found or not published
-          if (dbError.code === 'PGRST116') { // PostgREST code for "Not Found"
-            setError(`Page not found or not published: ${slug}`);
-            setPage(null); // Ensure page state is null
-          } else {
-            throw dbError; // Throw other Supabase errors
-          }
-        } else if (data) {
-          setPage(data as Page);
-        } else {
-          // Should be covered by PGRST116, but handle just in case
-          setError(`Page not found: ${slug}`);
-          setPage(null);
-        }
-      } catch (err: any) {
-        console.error("Error fetching dynamic page:", err);
-        setError(`Failed to load page: ${err.message}`);
-        setPage(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPage();
-  }, [slug]); // Re-fetch if slug changes
+  const { page, isLoading, error } = useDynamicPageData(slug); // Use the custom hook
+  const { t, isLoading: isLoadingTranslations, error: translationsError } = useTranslations('en'); // Keep translations for UI elements
 
   // Log translation errors if any
   useEffect(() => {
@@ -73,19 +25,24 @@ const DynamicPage: React.FC = () => {
     }
   }, [translationsError]);
 
-  // Loading state for page fetch
+  // Loading state for page fetch - Use the dedicated Skeleton component
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen bg-gray-900"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>;
+    return <DynamicPageSkeleton />;
   }
 
-  // Error state or Page Not Found
+  // Error state or Page Not Found - Display specific error message
   if (error || !page) {
+    // Determine a title based on the error or if the page is simply null
+    const errorTitle = error ? "Error Loading Page" : "Page Not Found";
+    // Use the specific error message from the hook, or a default message if page is null but no error string exists
+    const errorMessage = error || `The page you requested (${location.pathname}) could not be found or is not available.`;
+
+    // Add dark mode styling to error page elements
     return (
-      <div className="container mx-auto px-4 py-16 text-center text-text min-h-screen flex flex-col items-center justify-center">
-        <h1 className="text-4xl font-bold mb-4">Page Not Found</h1>
-        <p className="text-xl mb-4">The page you requested ({location.pathname}) could not be found or is not available.</p>
-        {error && <p className="text-red-500 text-sm mb-4">({error})</p>} {/* Optionally show error detail */}
-        <Link to="/" className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      <div className="container mx-auto px-4 py-16 text-center text-gray-900 dark:text-white min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-4xl font-bold mb-4">{errorTitle}</h1>
+        <p className="text-xl mb-4 text-red-500">{errorMessage}</p> {/* Error text remains red */}
+        <Link to="/" className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
           Go Home
         </Link>
       </div>
@@ -97,30 +54,49 @@ const DynamicPage: React.FC = () => {
 
   // Render the fetched page content
   return (
-    // Modified flex container to push footer down
-    <div
-      className="flex flex-col min-h-screen text-text ltr bg-gradient-to-br from-background to-background-secondary pb-20"
-    >
-      {/* Content container that grows */}
-      <div className="flex-grow container mx-auto px-4 py-16 backdrop-blur-sm relative text-center">
-        {/* Icon Link added at the top */}
-        <Link to="/" className="absolute top-6 left-6 text-secondary hover:text-primary text-2xl" aria-label="Back to Home">
+    <> {/* Use Fragment to wrap Helmet and the main div */}
+      <Helmet>
+        <title>{page.title} - OS Design</title> {/* Set dynamic title */}
+        {/* You could add meta description here too if available */}
+        {/* <meta name="description" content={page.meta_description || page.title} /> */}
+      </Helmet>
+      {/* Main container - Assuming CSS variables handle dark mode */}
+      <div
+        className="flex flex-col min-h-screen text-text ltr bg-gradient-to-br from-background to-background-secondary pb-20" // Relies on CSS vars from theme plugin
+      >
+        {/* Content container that grows - Removed text-center */}
+        <div className="flex-grow container mx-auto px-4 py-16 backdrop-blur-sm relative">
+          {/* Icon Link added at the top - Assuming CSS vars handle dark mode */}
+        <Link to="/" className="absolute top-6 left-6 text-secondary hover:text-primary text-2xl" aria-label="Back to Home"> {/* Relies on CSS vars */}
           &larr;
         </Link>
-        <h1 className="text-4xl bg-section font-bold container mx-auto px-4 py-16  backdrop-blur-sm text-title" text-titel>{page.title}</h1>
+        {/* Simplified Title - Assuming CSS vars handle dark mode */}
+        <h1 className="text-4xl font-bold text-title text-center mb-8">{page.title}</h1> {/* Relies on CSS vars */}
         {/* Render content using Quill's CSS classes */}
         {/* WARNING: Ensure page.content is sanitized if it comes from untrusted sources */}
-        <div className="p-6 prose bg-section prose-invert max-w-none text-text"> {/* Keep prose for overall page styling */}
+        {/* Content box - Assuming CSS vars handle dark mode for bg-section and text-text */}
+        {/* The prose classes handle typography styling, dark:prose-invert adjusts it for dark backgrounds */}
+        <div className="p-6 md:p-8 prose dark:prose-invert max-w-none bg-section text-text rounded-lg shadow-md"> {/* Added shadow */}
           {/* Apply ql-snow and ql-editor for Quill styles */}
           <div className="ql-snow">
-            <div className="ql-editor" dangerouslySetInnerHTML={{ __html: page.content }}></div>
+            {/* Sanitize content before rendering */}
+            <div className="ql-editor" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.content) }}></div>
+          </div>
+           {/* Display created_at and updated_at inside content box, aligned right - Added dark mode variants */}
+          <div className="mt-8 text-sm text-gray-500 dark:text-gray-400 text-right border-t border-gray-700 dark:border-gray-600 pt-4">
+            {page.created_at && (
+              <p>{t.ui?.page_created_at_label || 'Created:'} {format(new Date(page.created_at), 'yyyy-MM-dd HH:mm')}</p>
+            )}
+            {page.updated_at && page.updated_at !== page.created_at && ( // Only show updated if different from created
+              <p>{t.ui?.page_updated_at_label || 'Last Updated:'} {format(new Date(page.updated_at), 'yyyy-MM-dd HH:mm')}</p>
+            )}
           </div>
         </div>
         {/* Alternative for plain text: <p className="text-lg leading-relaxed text-text">{page.content}</p> */}
-        {/* Removed the old text link from the bottom */}
       </div>
       {/* Footer removed as copyright is handled in MainSite via SiteSettingsContext */}
     </div>
+  </> // Close the Fragment
   );
 };
 

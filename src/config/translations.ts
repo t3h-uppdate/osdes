@@ -23,6 +23,13 @@ export const translations = {
       getStarted: "Get Started", // Keep for UI elements if needed, distinct from hero button text
       projects: "Projects", // Added Projects key
       blog: "Blog", // Added Blog key
+      // Labels for dynamic page timestamps
+      page_created_at_label: "Created:",
+      page_updated_at_label: "Last Updated:",
+    },
+    blog: {
+      title: "Blog", // Keep title if used as section header
+      // description removed (moved to site_settings)
     },
     // generalInfo removed (moved to site_settings)
     // hero removed (moved to site_settings)

@@ -42,45 +42,45 @@ const PageListItem: React.FC<PageListItemProps> = ({
   };
 
   return (
-    // Adjusted grid columns for timestamps
-    <li key={page.id} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 border-b text-sm">
+    // Apply dark mode styles to list item hover and border
+    <li key={page.id} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b dark:border-gray-600 text-sm">
       {/* Order Number (col-span-1) */}
-      <div className="col-span-1 flex justify-center text-gray-600 font-mono">
+      <div className="col-span-1 flex justify-center text-gray-600 dark:text-gray-400 font-mono">
         {page.order ?? '-'}
       </div>
 
-      {/* Title / Slug (col-span-4) - Reduced span */}
+      {/* Title / Slug (col-span-4) */}
       <div className="col-span-4">
-        <p className="font-medium text-gray-900 truncate">{page.title}</p>
-        <p className="text-gray-500 truncate">/{page.slug}</p>
+        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{page.title}</p>
+        <p className="text-gray-500 dark:text-gray-400 truncate">/{page.slug}</p>
       </div>
 
-      {/* Status (col-span-1, centered) - Reduced span */}
+      {/* Status (col-span-1, centered) */}
       <div className="col-span-1 flex justify-center">
         {page.is_published ? (
-          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Pub</span>
+          <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 px-1.5 py-0.5 rounded-full">Pub</span>
         ) : (
-          <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full">Draft</span>
+          <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200 px-1.5 py-0.5 rounded-full">Draft</span>
         )}
       </div>
 
        {/* Created Date (col-span-2, centered) */}
-       <div className="col-span-2 text-center text-gray-500 text-xs">
+       <div className="col-span-2 text-center text-gray-500 dark:text-gray-400 text-xs">
          {formatDateTime(page.created_at)}
        </div>
 
        {/* Updated Date (col-span-2, centered) */}
-       <div className="col-span-2 text-center text-gray-500 text-xs">
+       <div className="col-span-2 text-center text-gray-500 dark:text-gray-400 text-xs">
          {formatDateTime(page.updated_at)}
        </div>
 
-      {/* Actions (col-span-2, right-aligned) - Reduced span */}
+      {/* Actions (col-span-2, right-aligned) */}
       <div className="col-span-2 flex justify-end items-center space-x-1">
          {/* Move Up Button */}
          <button
            onClick={() => onMoveUp(index)}
            disabled={isLoading || index === 0}
-           className={`p-1 rounded ${isLoading || index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-100'}`}
+           className={`p-1 rounded ${isLoading || index === 0 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
            title="Move Up"
          >
            <ArrowUp size={18} />
@@ -89,7 +89,7 @@ const PageListItem: React.FC<PageListItemProps> = ({
          <button
            onClick={() => onMoveDown(index)}
            disabled={isLoading || index === pageCount - 1}
-           className={`p-1 rounded ${isLoading || index === pageCount - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-100'}`}
+           className={`p-1 rounded ${isLoading || index === pageCount - 1 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
            title="Move Down"
          >
            <ArrowDown size={18} />
@@ -98,7 +98,7 @@ const PageListItem: React.FC<PageListItemProps> = ({
         <button
           onClick={() => onEdit(page)}
           disabled={isLoading}
-          className="p-1 rounded text-gray-500 hover:text-indigo-600 hover:bg-indigo-100 disabled:opacity-50"
+          className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-gray-600 disabled:opacity-50"
           title="Edit"
         >
           <Edit size={18} />
@@ -108,7 +108,7 @@ const PageListItem: React.FC<PageListItemProps> = ({
           <button
             onClick={() => onDelete(page.id!)}
             disabled={isLoading}
-            className="p-1 rounded text-gray-500 hover:text-red-600 hover:bg-red-100 disabled:opacity-50"
+            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-gray-600 disabled:opacity-50"
             title="Delete"
           >
           <Trash2 size={18} />
@@ -121,8 +121,8 @@ const PageListItem: React.FC<PageListItemProps> = ({
             disabled={isLoading}
             className={`p-1 rounded ${
               page.is_published
-                ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-100' // Style for "Unpublish"
-                : 'text-green-600 hover:text-green-700 hover:bg-green-100' // Style for "Publish"
+                ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-gray-600' // Style for "Unpublish"
+                : 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-gray-600' // Style for "Publish"
             } disabled:opacity-50`}
             title={page.is_published ? 'Unpublish' : 'Publish'}
           >

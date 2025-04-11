@@ -7,6 +7,19 @@
     <title>OS Design</title>
   </head>
   <body>
+    <script>
+      // Immediately apply theme class based on localStorage before React loads
+      (function() {
+        const theme = localStorage.getItem('themePreference'); // Must match SiteSettingsContext key
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          // Optional: explicitly add 'light' or remove 'dark' if needed,
+          // but Tailwind usually defaults to light styles without a class.
+          // document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

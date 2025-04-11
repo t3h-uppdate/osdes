@@ -34,7 +34,7 @@ const EditableField: React.FC<{
   return (
     // Use editIdentifier as the key for React reconciliation
     <div key={editIdentifier} className="mb-4">
-      <label htmlFor={editIdentifier} className="block text-sm font-medium text-gray-700 capitalize mb-1">
+      <label htmlFor={editIdentifier} className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize mb-1">
         {label}
       </label>
       {isEditing ? (
@@ -43,7 +43,7 @@ const EditableField: React.FC<{
             type="url"
             id={editIdentifier}
             name={editIdentifier}
-            className="block w-full flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white transition-shadow duration-150 ease-in-out"
+            className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
             value={value}
             onChange={(e) => onChangeHandler(e.target.value)} // Use the passed handler
             onBlur={() => setEditingPath(null)}
@@ -54,7 +54,7 @@ const EditableField: React.FC<{
             id={editIdentifier}
             name={editIdentifier}
             rows={value.length > 100 ? 5 : 3}
-            className="block w-full flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white transition-shadow duration-150 ease-in-out"
+            className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
             value={value}
             onChange={(e) => onChangeHandler(e.target.value)} // Use the passed handler
             onBlur={() => setEditingPath(null)}
@@ -63,10 +63,10 @@ const EditableField: React.FC<{
         )
       ) : (
         <div
-          className="block w-full flex-1 rounded-md border border-gray-200 bg-gray-50 p-2 cursor-pointer hover:bg-gray-100 min-h-[40px] whitespace-pre-wrap text-gray-800 transition-colors duration-150 ease-in-out break-words"
+          className="block w-full flex-1 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 min-h-[40px] whitespace-pre-wrap text-gray-800 dark:text-gray-200 transition-colors duration-150 ease-in-out break-words"
           onClick={() => setEditingPath(editIdentifier)} // Use the identifier to start editing
         >
-          {value || <span className="text-gray-400 italic">Click to edit...</span>}
+          {value || <span className="text-gray-400 dark:text-gray-500 italic">Click to edit...</span>}
         </div>
       )}
     </div>
@@ -107,14 +107,15 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+    // Add dark mode text color to the main container if needed, though EditableField handles most text
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-gray-900 dark:text-gray-100">
 
       {/* Column 1: General Site Info & Hero */}
       <div className="space-y-6">
 
         {/* General Site Info Section - Uses siteSettings */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 capitalize border-b border-gray-300 pb-2 mb-4">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
             {getStaticSectionName('generalInfo')}
           </h3>
           {/* Render fields directly from siteSettings */}
@@ -146,7 +147,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
 
         {/* Hero Section - Uses siteSettings */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 capitalize border-b border-gray-300 pb-2 mb-4">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
             {getStaticSectionName('hero')}
           </h3>
            <EditableField
@@ -189,7 +190,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
       <div className="space-y-6">
         {/* About Section - Uses siteSettings */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 capitalize border-b border-gray-300 pb-2 mb-4">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
             {getStaticSectionName('about')}
           </h3>
           <EditableField
@@ -205,7 +206,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
 
         {/* Footer Section - Uses siteSettings */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 capitalize border-b border-gray-300 pb-2 mb-4">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
             {getStaticSectionName('footer')}
           </h3>
            <EditableField
@@ -221,7 +222,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
 
         {/* Contact Section - Mixed: Info from siteSettings, Labels from translations */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 capitalize border-b border-gray-300 pb-2 mb-4">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
             {getStaticSectionName('contact')} / Info
           </h3>
 
@@ -252,7 +253,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
           />
 
           {/* Contact Form Labels/Placeholders - Use translations */}
-          <h4 className="text-lg font-medium text-gray-700 pt-4">Contact Form Text</h4>
+          <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 pt-4">Contact Form Text</h4>
           {contactData ? (
             Object.entries(contactData).map(([key, value]) => {
               // Exclude the main title, render other strings
@@ -274,7 +275,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
               return null;
             })
           ) : (
-            <p className="text-gray-500 italic">Contact form fields not available.</p>
+            <p className="text-gray-500 dark:text-gray-400 italic">Contact form fields not available.</p>
           )}
         </div>
       </div>

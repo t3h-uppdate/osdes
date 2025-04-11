@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useSiteSettings } from '../../../contexts/SiteSettingsContext'; // Import the hook
 
 // Define the structure for theme color data (matches StyleData in StyleEditorTab)
 interface ThemeData {
@@ -11,12 +12,12 @@ interface ThemeData {
   backgroundToColor: string;
   sectionBgColor: string;
   // Add fontFamily if you want the switcher to control it too
-  // fontFamily: string; 
+  // fontFamily: string;
 }
 
 // Define the props for ThemeSwitcher, including the callback
 interface ThemeSwitcherProps {
-  onThemeSelect: (themeData: ThemeData) => void; // Callback function prop
+  onThemeSelect: (themeData: ThemeData) => void; // Callback function prop for admin style editor
 }
 
 // Define the theme configurations directly in the component
@@ -75,8 +76,10 @@ const themeConfigs: Record<string, ThemeData> = {
 };
 
 
-const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ onThemeSelect }) => { // Destructure the prop
-  // Available themes (UI definition)
+const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ onThemeSelect }) => {
+  const { theme: currentGlobalTheme, toggleTheme } = useSiteSettings(); // Get global theme state and toggle function
+
+  // Available themes (UI definition) - Keep these for the switcher UI
   const themes = [
     { name: 'Light', value: 'light', icon: '☀️' },
     { name: 'Dark', value: 'dark', icon: '🌙' },
@@ -85,36 +88,43 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ onThemeSelect }) => { // 
     { name: 'Sunset', value: 'sunset', icon: '🌅' }
   ];
 
-  // Get initial theme from localStorage or default to 'light'
-  const [currentTheme, setCurrentTheme] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
-      // Ensure saved theme is one of the valid keys, otherwise default
-      return savedTheme && themeConfigs[savedTheme] ? savedTheme : 'light';
-    }
-    return 'light';
-  });
-
-  // Apply theme class to HTML element
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const themeValues = Object.keys(themeConfigs); // Use keys from our config
-      document.documentElement.classList.remove(...themeValues);
-      document.documentElement.classList.add(currentTheme);
-      localStorage.setItem('theme', currentTheme);
-    }
-  }, [currentTheme]); // Removed themes from dependency array as it's stable
-
   // Handle theme change
-  const handleThemeChange = (newThemeValue: string) => {
-    const newThemeData = themeConfigs[newThemeValue];
+  const handleThemeChange = (selectedThemeValue: string) => {
+    // console.log(`[ThemeSwitcher handleThemeChange] Clicked: ${selectedThemeValue}, Current Global Theme: ${currentGlobalTheme}`); // Log values (Removed)
+    const newThemeData = themeConfigs[selectedThemeValue];
     if (newThemeData) {
-      setCurrentTheme(newThemeValue);
-      onThemeSelect(newThemeData); // Call the callback with the selected theme's data
+      // Call the original callback for admin style editor updates
+      onThemeSelect(newThemeData);
+
+      // If 'light' or 'dark' was clicked, toggle the global theme if it's different
+      if (selectedThemeValue === 'light' && currentGlobalTheme !== 'light') {
+        // console.log('[ThemeSwitcher handleThemeChange] Condition met: Toggling theme to light.'); // Log before toggle (Removed)
+        toggleTheme();
+      } else if (selectedThemeValue === 'dark' && currentGlobalTheme !== 'dark') {
+        // console.log('[ThemeSwitcher handleThemeChange] Condition met: Toggling theme to dark.'); // Log before toggle (Removed)
+        toggleTheme();
+      } else {
+        // console.log('[ThemeSwitcher handleThemeChange] Condition NOT met for toggling global theme.'); // Log if condition fails (Removed)
+      }
+      // Note: Clicking 'Forest', 'Ocean', 'Sunset' will update the admin preview via onThemeSelect
+      // but won't change the global light/dark mode unless we add specific logic for it.
+      // The current requirement is only about persisting light/dark.
+
     } else {
-      console.warn(`Theme data not found for: ${newThemeValue}`);
+      console.warn(`Theme data not found for: ${selectedThemeValue}`);
     }
   };
+
+  // Determine active button based on global theme for light/dark,
+  // or potentially a separate state if other themes should show as active.
+  // For now, only highlight light/dark based on global context.
+  const getActiveClass = (themeValue: string) => {
+    if (themeValue === 'light' && currentGlobalTheme === 'light') return 'bg-[var(--color-primary)] text-white shadow-md';
+    if (themeValue === 'dark' && currentGlobalTheme === 'dark') return 'bg-[var(--color-primary)] text-white shadow-md';
+    // Default/inactive style
+    return 'bg-[var(--color-background-secondary)] text-[var(--color-text)] hover:bg-[var(--color-secondary)] hover:text-white';
+  };
+
 
   return (
     <div className="theme-switcher">
@@ -124,13 +134,9 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ onThemeSelect }) => { // 
           {themes.map((theme) => (
             <button
               key={theme.value}
-              onClick={() => handleThemeChange(theme.value)} // Use the updated handler
-              // Styling uses CSS variables for theme awareness
-              className={`p-1 sm:p-2 rounded-md text-xs sm:text-sm transition-colors duration-150 ${
-                currentTheme === theme.value
-                  ? 'bg-[var(--color-primary)] text-white shadow-md' // Add shadow for active
-                  : 'bg-[var(--color-background-secondary)] text-[var(--color-text)] hover:bg-[var(--color-secondary)] hover:text-white'
-              }`}
+              onClick={() => handleThemeChange(theme.value)}
+              // Styling uses CSS variables for theme awareness and active state from context
+              className={`p-1 sm:p-2 rounded-md text-xs sm:text-sm transition-colors duration-150 ${getActiveClass(theme.value)}`}
               title={theme.name}
             >
               <span className="flex items-center">

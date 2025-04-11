@@ -99,14 +99,20 @@ const ProjectsSection: React.FC = () => {
   if (isLoading && projects.length === 0) { // Show loader only on initial load
     return (
       <div className="flex justify-center items-center p-6">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-        <span className="ml-2 text-gray-600">Loading projects...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500 dark:text-gray-400" />
+        <span className="ml-2 text-gray-600 dark:text-gray-400">Loading projects...</span>
       </div>
     );
   }
 
   if (error) {
-    return <p className="text-red-500 p-4">Error loading projects: {error}</p>;
+    // Use a more styled error box
+    return (
+      <div className="p-4 bg-red-50 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg">
+        <p className="text-red-700 dark:text-red-200 font-medium">Error loading projects:</p>
+        <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+      </div>
+    );
   }
 
   return (
@@ -118,7 +124,7 @@ const ProjectsSection: React.FC = () => {
         <button
           onClick={handleAddNewProjectClick} // Use the new handler
           disabled={isLoading} // Disable button while loading/saving
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2 disabled:opacity-50"
+          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Add new project item"
         >
           <PlusSquare size={16} /> Add New Project
@@ -127,11 +133,11 @@ const ProjectsSection: React.FC = () => {
 
       {/* Project Items List */}
       <div className="space-y-3">
-        <h3 className="text-lg font-medium text-gray-800 border-b pb-2 mb-3">
+        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 border-b border-gray-300 dark:border-gray-600 pb-2 mb-3">
           Project Items ({projects.length})
         </h3>
         {projects.length === 0 ? (
-          <p className="text-gray-500 italic">No projects added yet. Click "Add New Project" to begin.</p>
+          <p className="text-gray-500 dark:text-gray-400 italic">No projects added yet. Click "Add New Project" to begin.</p>
         ) : (
           // Use projects array from the hook
           projects.map((project) => {
@@ -141,10 +147,10 @@ const ProjectsSection: React.FC = () => {
 
             return (
               // Use project.id as the key
-              <div key={project.id} className="bg-gray-50 rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              <div key={project.id} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm overflow-hidden">
                 {/* Clickable Header */}
                 <div
-                  className="flex items-center p-3 cursor-pointer hover:bg-gray-100 relative group"
+                  className="flex items-center p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600/50 relative group"
                   onClick={() => toggleItemExpansion(project.id)} // Use project.id
                   role="button"
                   tabIndex={0}
@@ -153,12 +159,12 @@ const ProjectsSection: React.FC = () => {
                   aria-controls={`project-content-${project.id}`} // Use project.id
                 >
                   {/* Chevron Icon */}
-                  <div className="mr-3 text-gray-500">
+                  <div className="mr-3 text-gray-500 dark:text-gray-400">
                     {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </div>
 
                   {/* Project Title (Display Only in Header) */}
-                  <div className="flex-grow mr-2 font-medium text-gray-700 truncate">
+                  <div className="flex-grow mr-2 font-medium text-gray-700 dark:text-gray-200 truncate">
                     {project.title || `Project: ${project.id}`} {/* Show title or ID */}
                   </div>
 
@@ -170,7 +176,7 @@ const ProjectsSection: React.FC = () => {
                       handleDeleteClick(project.id, project.title);
                     }}
                     disabled={isLoading} // Disable button during loading/saving
-                    className="p-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:ring-1 focus:ring-red-500 rounded-full z-10 disabled:opacity-50"
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:ring-1 focus:ring-red-500 dark:focus:ring-red-400 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label={`Delete project ${project.title || project.id}`}
                   >
                     <Trash2 size={18} />
@@ -179,10 +185,10 @@ const ProjectsSection: React.FC = () => {
 
                 {/* Collapsible Content */}
                 {isExpanded && (
-                  <div id={`project-content-${project.id}`} className="p-4 border-t border-gray-200 bg-white space-y-4">
+                  <div id={`project-content-${project.id}`} className="p-4 border-t border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 space-y-4">
                     {/* Project Title Input */}
                     <div>
-                      <label htmlFor={`project-title-${project.id}`} className="block text-sm font-medium text-gray-600 mb-1">
+                      <label htmlFor={`project-title-${project.id}`} className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Project Title
                       </label>
                       <input
@@ -190,7 +196,7 @@ const ProjectsSection: React.FC = () => {
                         type="text"
                         value={project.title || ''}
                         onChange={(e) => handleProjectChange(project.id, 'title', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-500 disabled:opacity-70"
                         placeholder="Enter project title"
                         disabled={isLoading}
                       />
@@ -198,7 +204,7 @@ const ProjectsSection: React.FC = () => {
 
                     {/* Project Description Input */}
                     <div>
-                      <label htmlFor={`project-description-${project.id}`} className="block text-sm font-medium text-gray-600 mb-1">
+                      <label htmlFor={`project-description-${project.id}`} className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Description
                       </label>
                       <textarea
@@ -206,7 +212,7 @@ const ProjectsSection: React.FC = () => {
                         value={project.description || ''}
                         onChange={(e) => handleProjectChange(project.id, 'description', e.target.value)}
                         rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-500 disabled:opacity-70"
                         placeholder="Enter project description"
                         disabled={isLoading}
                       />
@@ -214,7 +220,7 @@ const ProjectsSection: React.FC = () => {
 
                      {/* Project Image URL Input */}
                     <div>
-                      <label htmlFor={`project-image-${project.id}`} className="block text-sm font-medium text-gray-600 mb-1">
+                      <label htmlFor={`project-image-${project.id}`} className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Image URL
                       </label>
                       <input
@@ -222,7 +228,7 @@ const ProjectsSection: React.FC = () => {
                         type="url"
                         value={project.image_url || ''}
                         onChange={(e) => handleProjectChange(project.id, 'image_url', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-500 disabled:opacity-70"
                         placeholder="https://example.com/image.jpg"
                         disabled={isLoading}
                       />
@@ -230,21 +236,21 @@ const ProjectsSection: React.FC = () => {
 
                     {/* Project Tags Input */}
                     <div>
-                      <label htmlFor={`project-tags-input-${project.id}`} className="block text-sm font-medium text-gray-600 mb-1">
+                      <label htmlFor={`project-tags-input-${project.id}`} className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Tags (add with Enter or comma)
                       </label>
-                      <div className="flex flex-wrap items-center gap-2 p-2 border border-gray-300 rounded-md bg-white">
+                      <div className="flex flex-wrap items-center gap-2 p-2 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-600">
                         {currentTags.map((tag, index) => (
-                          <span key={index} className="flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                          <span key={index} className="flex items-center bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
                             {tag}
                             <button
                               type="button"
                               onClick={() => handleRemoveTag(project.id, currentTags, tag)}
-                              className="ml-1.5 text-blue-600 hover:text-blue-800 focus:outline-none disabled:opacity-50"
+                              className="ml-1.5 text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-100 focus:outline-none disabled:opacity-50"
                               aria-label={`Remove tag ${tag}`}
                               disabled={isLoading}
                             >
-                              &times;
+                              &times; {/* Consider using a Lucide icon like XCircle */}
                             </button>
                           </span>
                         ))}
@@ -254,7 +260,7 @@ const ProjectsSection: React.FC = () => {
                           value={tagInputValue[project.id] || ''}
                           onChange={(e) => handleTagInputChange(project.id, e.target.value)}
                           onKeyDown={(e) => handleTagInputKeyDown(e, project.id, currentTags)}
-                          className="flex-grow px-1 py-0.5 border-none focus:ring-0 focus:outline-none text-sm disabled:bg-gray-100"
+                          className="flex-grow px-1 py-0.5 border-none focus:ring-0 focus:outline-none text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 disabled:bg-gray-100 dark:disabled:bg-gray-500 disabled:opacity-70"
                           placeholder={currentTags.length === 0 ? "e.g., react, typescript" : "Add tag..."}
                           disabled={isLoading}
                         />
@@ -263,7 +269,7 @@ const ProjectsSection: React.FC = () => {
 
                     {/* Project Live URL Input */}
                     <div>
-                      <label htmlFor={`project-live-url-${project.id}`} className="block text-sm font-medium text-gray-600 mb-1">
+                      <label htmlFor={`project-live-url-${project.id}`} className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Live URL (Optional)
                       </label>
                       <input
@@ -271,7 +277,7 @@ const ProjectsSection: React.FC = () => {
                         type="url"
                         value={project.live_url || ''}
                         onChange={(e) => handleProjectChange(project.id, 'live_url', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-500 disabled:opacity-70"
                         placeholder="https://live-project.com"
                         disabled={isLoading}
                       />
@@ -279,7 +285,7 @@ const ProjectsSection: React.FC = () => {
 
                      {/* Project Repo URL Input */}
                     <div>
-                      <label htmlFor={`project-repo-url-${project.id}`} className="block text-sm font-medium text-gray-600 mb-1">
+                      <label htmlFor={`project-repo-url-${project.id}`} className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Repository URL (Optional)
                       </label>
                       <input
@@ -287,7 +293,7 @@ const ProjectsSection: React.FC = () => {
                         type="url"
                         value={project.repo_url || ''}
                         onChange={(e) => handleProjectChange(project.id, 'repo_url', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-500 disabled:opacity-70"
                         placeholder="https://github.com/user/repo"
                         disabled={isLoading}
                       />
@@ -295,7 +301,7 @@ const ProjectsSection: React.FC = () => {
 
                      {/* Sort Order Input */}
                     <div>
-                       <label htmlFor={`project-sort-${project.id}`} className="block text-sm font-medium text-gray-600 mb-1">
+                       <label htmlFor={`project-sort-${project.id}`} className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Sort Order (Optional)
                       </label>
                       <input
@@ -303,7 +309,7 @@ const ProjectsSection: React.FC = () => {
                         type="number"
                         value={project.sort_order ?? ''} // Handle potential undefined value
                         onChange={(e) => handleProjectChange(project.id, 'sort_order', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-500 disabled:opacity-70"
                         placeholder="e.g., 0, 1, 2..."
                         disabled={isLoading}
                       />

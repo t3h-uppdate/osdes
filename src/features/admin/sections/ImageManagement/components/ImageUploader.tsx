@@ -21,7 +21,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess }) => {
   });
 
   return (
-    <div className="space-y-6">
+    // Add dark mode background/text if needed, though children might handle it
+    <div className="space-y-6 text-gray-900 dark:text-gray-100">
       {/* Top Section: Upload Area or Status */}
       {uploadHook.status === 'idle' ? (
         <ImageUploadArea
