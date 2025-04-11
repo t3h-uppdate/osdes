@@ -1,6 +1,6 @@
 import React from 'react';
 import { Page } from '../types'; // Assuming Page type is in ../types
-import { Trash2, Edit, CheckCircle, EyeOff } from 'lucide-react'; // Removed ArrowUp, ArrowDown
+import { Trash2, Edit, CheckCircle, EyeOff, ArrowUp, ArrowDown } from 'lucide-react'; // Re-added ArrowUp, ArrowDown
 
 // --- Types ---
 interface PageListItemProps {
@@ -10,9 +10,9 @@ interface PageListItemProps {
   isLoading: boolean;
   onEdit: (page: Page) => void;
   onDelete: (id: string) => void;
-  // onMoveUp: (index: number) => void; // Removed
-  // onMoveDown: (index: number) => void; // Removed
-  onTogglePublish: (id: string, currentState: boolean) => void; // Added handler for publishing
+  onMoveUp: (index: number) => void; // Re-added
+  onMoveDown: (index: number) => void; // Re-added
+  onTogglePublish: (id: string, currentState: boolean) => void;
 }
 
 // --- PageListItem Component ---
@@ -23,32 +23,77 @@ const PageListItem: React.FC<PageListItemProps> = ({
   isLoading,
   onEdit,
   onDelete,
-  // onMoveUp, // Removed
-  // onMoveDown, // Removed
-  onTogglePublish, // Destructure the new prop
+  onMoveUp, // Re-added
+  onMoveDown, // Re-added
+  onTogglePublish,
 }) => {
+  // Helper to format date and time
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      // More detailed format, adjust as needed
+      return new Date(dateString).toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      });
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  };
+
   return (
-    <li key={page.id} className="p-4 flex justify-between items-center hover:bg-gray-50 border-b"> {/* Added border */}
-      <div className="flex items-center space-x-3">
-        {/* Order Display (Optional but helpful) */}
-        <span className="text-xs font-mono text-gray-400 w-6 text-right">{page.order}</span>
-        {/* Page Info */}
-        {/* Page Info */}
-        <div>
-          <p className="font-medium text-gray-900 flex items-center">
-            {page.title}
-            {/* Publish Status Indicator */}
-            {page.is_published ? (
-              <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Published</span>
-            ) : (
-              <span className="ml-2 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Draft</span>
-            )}
-          </p>
-          <p className="text-sm text-gray-500">/{page.slug}</p>
-        </div>
+    // Adjusted grid columns for timestamps
+    <li key={page.id} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 border-b text-sm">
+      {/* Order Number (col-span-1) */}
+      <div className="col-span-1 flex justify-center text-gray-600 font-mono">
+        {page.order ?? '-'}
       </div>
-      <div className="flex items-center space-x-1">
-        {/* Move buttons removed */}
+
+      {/* Title / Slug (col-span-4) - Reduced span */}
+      <div className="col-span-4">
+        <p className="font-medium text-gray-900 truncate">{page.title}</p>
+        <p className="text-gray-500 truncate">/{page.slug}</p>
+      </div>
+
+      {/* Status (col-span-1, centered) - Reduced span */}
+      <div className="col-span-1 flex justify-center">
+        {page.is_published ? (
+          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Pub</span>
+        ) : (
+          <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full">Draft</span>
+        )}
+      </div>
+
+       {/* Created Date (col-span-2, centered) */}
+       <div className="col-span-2 text-center text-gray-500 text-xs">
+         {formatDateTime(page.created_at)}
+       </div>
+
+       {/* Updated Date (col-span-2, centered) */}
+       <div className="col-span-2 text-center text-gray-500 text-xs">
+         {formatDateTime(page.updated_at)}
+       </div>
+
+      {/* Actions (col-span-2, right-aligned) - Reduced span */}
+      <div className="col-span-2 flex justify-end items-center space-x-1">
+         {/* Move Up Button */}
+         <button
+           onClick={() => onMoveUp(index)}
+           disabled={isLoading || index === 0}
+           className={`p-1 rounded ${isLoading || index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-100'}`}
+           title="Move Up"
+         >
+           <ArrowUp size={18} />
+         </button>
+         {/* Move Down Button */}
+         <button
+           onClick={() => onMoveDown(index)}
+           disabled={isLoading || index === pageCount - 1}
+           className={`p-1 rounded ${isLoading || index === pageCount - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-100'}`}
+           title="Move Down"
+         >
+           <ArrowDown size={18} />
+         </button>
         {/* Edit Button */}
         <button
           onClick={() => onEdit(page)}

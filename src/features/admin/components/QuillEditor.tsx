@@ -2,6 +2,8 @@ import React, { useMemo, useRef, useEffect, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
 import { Maximize2, Minimize2 } from 'lucide-react'; // Import icons for slider
+import supabase from '../../../config/supabaseConfig'; // Corrected path
+import { useNotifications } from '../../../contexts/NotificationContext'; // Corrected path
 
 interface QuillEditorProps {
   value: string;
@@ -24,6 +26,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 }) => {
   const quillRef = useRef<ReactQuill>(null);
   const [editorHeight, setEditorHeight] = useState(DEFAULT_HEIGHT);
+  const { showToast } = useNotifications(); // Get toast function
 
   // --- Prevent page jump on picker click ---
   useEffect(() => {
@@ -76,83 +79,94 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         [{ 'direction': 'rtl' }],
         [{ 'align': [] }],
         [{ 'color': [] }, { 'background': [] }],
-        ['link', 'image', 'video'],
+        ['link', 'image', 'video'], // Keep image button
         ['clean']
       ],
       handlers: {
-        image: function() { // Use 'function' to access Quill instance via 'this' if needed, or stick to ref
+        // Custom image handler for uploads
+        image: function() {
           const quill = quillRef.current?.getEditor();
           if (!quill) {
             console.error("Quill editor instance not found.");
+            showToast("Editor not available.", "error");
             return;
           }
 
-          const range = quill.getSelection(true);
+          const range = quill.getSelection(true); // Get cursor position
           if (!range) return;
 
-          const tooltip = (quill as any).theme.tooltip;
-          const originalSave = tooltip.save;
-          const originalAction = tooltip.action;
+          // Create a file input element dynamically
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.style.display = 'none'; // Hide the input
 
-          tooltip.edit();
-
-          const input = tooltip.textbox as HTMLInputElement;
-          if (!input) {
-              console.error("Tooltip input element not found.");
-              tooltip.hide();
+          // Handle file selection
+          input.onchange = async () => {
+            const file = input.files?.[0];
+            if (!file || !supabase) {
+              if (!supabase) showToast("Storage service not configured.", "error");
+              document.body.removeChild(input); // Clean up input
               return;
-          }
-
-          input.value = '';
-          input.setAttribute('placeholder', 'Enter image URL');
-          input.setAttribute('data-mode', 'image');
-
-          const saveHandler = () => {
-            const url = input.value;
-            if (url) {
-              quill.insertEmbed(range.index, 'image', url, 'user');
-              tooltip.hide();
-            } else {
-              tooltip.hide();
             }
-            tooltip.save = originalSave;
-            tooltip.action = originalAction;
-            input.removeEventListener('keydown', keydownHandler);
-            tooltip.root.querySelector('a.ql-action')?.removeEventListener('click', saveHandler);
+
+            // Show uploading feedback (optional)
+            // quill.formatText(range.index, 0, { 'placeholder': 'Uploading...' }); // Placeholder text idea
+            showToast("Uploading image...", "success"); // Changed "info" to "success"
+
+            const timestamp = Date.now();
+            const BUCKET_NAME = 'img'; // Consistent with useImageUpload
+            const filePath = `public/${timestamp}_${file.name}`;
+
+            try {
+              // Upload to Supabase
+              const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: false,
+                });
+
+              if (uploadError) throw uploadError;
+
+              // Get public URL
+              const { data: urlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(filePath);
+
+              if (!urlData || !urlData.publicUrl) {
+                throw new Error('Failed to retrieve public URL after upload.');
+              }
+
+              const publicUrl = urlData.publicUrl;
+
+              // Insert image into editor
+              quill.insertEmbed(range.index, 'image', publicUrl, 'user');
+              quill.setSelection(range.index + 1, 0); // Move cursor after image
+              showToast("Image uploaded successfully!", "success");
+
+            } catch (err) {
+              console.error("Image upload failed:", err);
+              const errorMessage = `Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`;
+              showToast(errorMessage, "error");
+            } finally {
+              // Clean up the input element
+              document.body.removeChild(input);
+            }
           };
 
-          const keydownHandler = (e: KeyboardEvent) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              saveHandler();
-            } else if (e.key === 'Escape') {
-              e.preventDefault();
-              tooltip.hide();
-              tooltip.save = originalSave;
-              tooltip.action = originalAction;
-              input.removeEventListener('keydown', keydownHandler);
-              tooltip.root.querySelector('a.ql-action')?.removeEventListener('click', saveHandler);
-            }
-          };
+          // Append to body and trigger click
+          document.body.appendChild(input);
+          input.click();
 
-          tooltip.save = saveHandler;
-
-          input.removeEventListener('keydown', keydownHandler);
-          input.addEventListener('keydown', keydownHandler);
-
-          const saveButton = tooltip.root.querySelector('a.ql-action');
-          if (saveButton) {
-            saveButton.removeEventListener('click', saveHandler);
-            saveButton.addEventListener('click', saveHandler);
-          } else {
-            console.warn("Tooltip save button (a.ql-action) not found.");
-          }
-
-          input.focus();
+          // Optional: Add listener to remove input if user cancels file dialog
+          // This is tricky across browsers, often the 'onchange' not firing is the indicator.
+          // A simple timeout or focus check could work but isn't foolproof.
+          // The current cleanup in `onchange` handles the success/error cases.
         }
       }
     }
-  }), []);
+  }), [showToast]); // Add showToast to dependency array
 
   const formats = useMemo(() => [
     'header', 'font', 'size', 'bold', 'italic', 'underline', 'strike',

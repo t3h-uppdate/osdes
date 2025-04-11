@@ -6,4 +6,6 @@ export interface Page {
   content: string; // Page content (e.g., Markdown, HTML)
   order?: number; // Make order optional as we sort by created_at now
   is_published?: boolean; // Add is_published if it's part of the page data model
+  created_at?: string; // Add creation timestamp
+  updated_at?: string; // Add update timestamp
 }

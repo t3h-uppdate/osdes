@@ -56,6 +56,7 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
           value={pageTitle}
           onChange={(e) => setPageTitle(e.target.value)}
           required
+          placeholder="Enter page title" // Added placeholder
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
@@ -67,6 +68,7 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
           value={pageSlug}
           onChange={handleSlugChange}
           required
+          placeholder="e.g., about-us, contact-page" // Added placeholder
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           pattern="^[a-z0-9-]+$"
           title="Slug can only contain lowercase letters, numbers, and hyphens."

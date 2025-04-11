@@ -35,7 +35,7 @@ export const useDynamicPages = () => {
           .from(PAGES_TABLE)
           .select('*') // Select all columns
           .eq('is_published', true) // Only fetch published pages
-          .order('created_at', { ascending: false }); // Order by creation date, newest first
+          .order('order', { ascending: true, nullsFirst: false }); // Order by manual order for public site
 
         if (error) throw error;
 
@@ -47,8 +47,8 @@ export const useDynamicPages = () => {
           title: item.title,
           content: item.content,
           is_published: item.is_published,
-          // Add other fields from Page type if they exist in Supabase table
-          // e.g., order: item.sort_order (if added later)
+          order: item.order, // Ensure order is mapped if needed by Page type
+          created_at: item.created_at, // Keep created_at if needed elsewhere
         } as Page)) || []; // Default to empty array
 
         setDynamicPages(pagesList);
