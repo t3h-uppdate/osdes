@@ -1,6 +1,7 @@
 // React & Router
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion'; // Import motion
 
 // Supabase
 import supabase from '../../../config/supabaseConfig'; // Import Supabase client
@@ -31,6 +32,9 @@ import { getStaticSectionName } from '../utils/helpers'; // Moved general helper
 // Note: Types import might be needed if './types' exists and is used directly
 
 // --- Constants ---
+import { pageVariants, pageTransition } from '../../../config/animations'; // Import shared animations
+
+// Removed local animation variants and transition
 
 // Mock data for dashboard widgets (Consider moving to a separate file or fetching if dynamic)
 
@@ -133,7 +137,14 @@ const AdminDashboard: React.FC = () => {
   const isSaveDisabled = isLoading || saveStatus.includes('Saving');
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+      className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+    >
       {/* TopNavBar styling is likely handled within its own component */}
       <TopNavBar
           isMobile={isMobile}
@@ -240,7 +251,7 @@ const AdminDashboard: React.FC = () => {
         </main>
       </div>
       {/* ToastNotification and ConfirmationModal are rendered by NotificationProvider */}
-    </div>
+    </motion.div> // Close motion.div
   );
 };
 

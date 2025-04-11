@@ -3,11 +3,11 @@ import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css'; // Ensure CSS is imported
 
 const DynamicPageSkeleton: React.FC = () => {
+  // Removed SkeletonTheme wrapper, styles are now handled globally in index.css
   return (
-    <SkeletonTheme baseColor="#2d3748" highlightColor="#4a5568"> {/* Adjust colors to match theme */}
-      <div className="flex flex-col min-h-screen text-text ltr bg-gradient-to-br from-background to-background-secondary pb-20">
-        {/* Removed text-center from container */}
-        <div className="flex-grow container mx-auto px-4 py-16 backdrop-blur-sm relative">
+    <div className="flex flex-col min-h-screen text-text ltr bg-gradient-to-br from-background to-background-secondary pb-20">
+      {/* Removed text-center from container */}
+      <div className="flex-grow container mx-auto px-4 py-16 backdrop-blur-sm relative">
           {/* Skeleton for Back Link */}
           <div className="absolute top-6 left-6">
             <Skeleton width={30} height={30} />
@@ -28,8 +28,7 @@ const DynamicPageSkeleton: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-    </SkeletonTheme>
+    </div>
   );
 };
 

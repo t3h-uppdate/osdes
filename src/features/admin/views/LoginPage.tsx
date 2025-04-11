@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import { useNavigate } from 'react-router-dom';
-import supabase from '../../../config/supabaseConfig'; // Import Supabase client
+import { motion } from 'framer-motion';
+import supabase from '../../../config/supabaseConfig';
+import { pageVariants, pageTransition, spaceParticlesOptions } from '../../../config/animations';
+import Particles, { initParticlesEngine } from '@tsparticles/react'; // Corrected import path
+import type { Engine } from '@tsparticles/engine'; // Import Engine type
+import { loadSlim } from '@tsparticles/slim';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +13,21 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [init, setInit] = useState(false); // State for particle engine initialization
+
+  // Initialize particles engine
+  useEffect(() => {
+    initParticlesEngine(async (engine: Engine) => { // Added Engine type
+      await loadSlim(engine);
+    }).then(() => {
+      setInit(true);
+    });
+  }, []);
+
+  const particlesLoaded = useCallback(async (container: any) => {
+    // console.log('Particles loaded', container); // Optional: log when particles are loaded
+  }, []);
+
 
   // Check initial auth state and listen for changes with Supabase
   useEffect(() => {
@@ -79,10 +99,27 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-        <h2 className="text-3xl font-extrabold text-center text-gray-900 dark:text-white">
-          Admin Login
+    <div className="relative min-h-screen"> {/* Added relative positioning wrapper */}
+      {init && (
+        <Particles
+          id="tsparticles"
+          options={spaceParticlesOptions}
+          particlesLoaded={particlesLoaded}
+          className="absolute inset-0 z-0" // Position particles behind content
+        />
+      )}
+      <motion.div
+        initial="initial"
+        animate="in"
+        exit="out"
+        variants={pageVariants}
+        transition={pageTransition}
+        className="relative z-10 flex items-center justify-center min-h-screen" // Added relative z-10
+      >
+        {/* Make background transparent so particles show through */}
+        <div className="w-full max-w-md p-8 space-y-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <h2 className="text-3xl font-extrabold text-center text-gray-900 dark:text-white">
+            Admin Login
         </h2>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {/* Email Input */}
@@ -150,9 +187,10 @@ const LoginPage: React.FC = () => {
               )}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+        </form> {/* Removed duplicate form tag */}
+        </div> {/* Close inner div */}
+      </motion.div> {/* Close motion.div */}
+    </div> // Close relative wrapper
   );
 };
 

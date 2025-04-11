@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Page } from '../../admin/sections/Pages/types'; // Corrected path
 
+
 interface BlogSectionProps {
   dynamicPages: Page[];
 }
@@ -11,7 +12,7 @@ const BlogSection: React.FC<BlogSectionProps> = ({ dynamicPages }) => {
     <section id='blog' className="container mx-auto px-4 py-16 shadow-xl backdrop-blur-sm">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl font-bold text-center mb-8 text-title">
-          Blog
+        Blog
         </h2>
         {dynamicPages && dynamicPages.length > 0 && (
           <div className="flex justify-center flex-wrap gap-x-4 gap-y-2 mt-4">

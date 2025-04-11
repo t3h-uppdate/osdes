@@ -1,11 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* ==========================================================================
    Imports
    ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ==========================================================================
    CSS Variables (Theme Configuration)
@@ -193,4 +193,40 @@ html.dark {
 
 .animate-fade-in-out {
   animation: fadeInOut 3s ease-in-out forwards; /* Match duration in showToast */
+}
+
+/* ==========================================================================
+   Custom Component Styles: React Loading Skeleton
+   ========================================================================== */
+/* Apply base and highlight colors using CSS variables */
+.react-loading-skeleton {
+  /* Use a slightly darker/lighter shade of the secondary background for base */
+  --base-color: var(--color-background-secondary);
+  /* Use the main background color for highlight */
+  --highlight-color: var(--color-background);
+
+  /* Ensure the pseudo-element uses these variables */
+  &::after {
+    background: linear-gradient(90deg,
+      var(--base-color),
+      var(--highlight-color),
+      var(--base-color)
+    ) !important; /* Use !important to override inline styles if necessary */
+  }
+}
+
+/* Dark mode overrides */
+html.dark .react-loading-skeleton {
+  /* Swap colors for dark mode */
+  --base-color: var(--color-background-secondary); /* gray-800 */
+  --highlight-color: var(--color-section); /* gray-700 or similar */
+
+  /* Ensure the pseudo-element uses these variables */
+   &::after {
+    background: linear-gradient(90deg,
+      var(--base-color),
+      var(--highlight-color),
+      var(--base-color)
+    ) !important;
+  }
 }

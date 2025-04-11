@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link
+import { motion } from 'framer-motion'; // Import motion
 import { Home, Mail, ArrowRight, Phone, MapPin } from 'lucide-react'; // Removed Menu, X, Moon, Sun
 import { useNotifications } from '../contexts/NotificationContext';
 import { useSocialLinks, iconComponents } from '../hooks/useSocialLinks'; // Import the hook and icons
@@ -13,9 +14,14 @@ import ProjectsSection from '../features/projects/components/ProjectsSection';
 import { useFetchProjects } from '../features/projects/hooks/useFetchProjects';
 import BlogSection from '../features/blog/components/BlogSection'; // Import BlogSection
 import { useDynamicPages } from '../hooks/useDynamicPages'; // Import the hook for dynamic pages
+import { pageVariants, pageTransition } from '../config/animations'; // Corrected import path
+import LoadingSpinner from '../components/common/LoadingSpinner'; // Import the spinner
 
 // Language type
 type Language = 'en' | 'sv' | 'ar';
+
+// Removed local animation variants and transition
+
 
 function MainSite() {
   useNotifications();
@@ -52,7 +58,12 @@ function MainSite() {
   // Loading indicator (consider checking settings loading state if available)
   // Also check if settings object itself is loaded if useSiteSettings provides that
   if (isLoading || !settings) { // Added check for settings object
-    return <div className="min-h-screen flex items-center justify-center">Loading site content...</div>;
+    // Use the LoadingSpinner component
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size={48} /> {/* Adjust size as needed */}
+      </div>
+    );
   }
 
   // Optional: Display error message
@@ -71,7 +82,14 @@ function MainSite() {
   // Remove isDarkMode check from main div class - context handles this on <html>
   // Add base dark mode styles here
   return (
-    <div className={`min-h-screen ${language === 'ar' ? 'rtl' : ''} bg-white text-gray-900 dark:bg-gray-900 dark:text-white`}>
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+      className={`min-h-screen ${language === 'ar' ? 'rtl' : ''} bg-white text-gray-900 dark:bg-gray-900 dark:text-white`}
+    >
       {/* Use the new Navigation component */}
       {/* Ensure 't' and 'settings' are available before rendering Navigation */}
       {t && settings && (
@@ -249,7 +267,7 @@ function MainSite() {
           </div>
         </div>
       </footer>
-    </div>
+    </motion.div> // Close motion.div
   );
 }
 

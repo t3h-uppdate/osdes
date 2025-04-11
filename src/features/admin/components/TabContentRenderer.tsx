@@ -16,6 +16,7 @@ import { getStaticSectionName } from '../utils/helpers';
 import { TranslationsType } from '../../../types/translations';
 // Import SiteSettingsData type
 import { SiteSettingsData } from '../hooks/useAdminData'; // Assuming it's exported from hook
+import LoadingSpinner from '../../../components/common/LoadingSpinner'; // Import the spinner
 
 // Mock data for dashboard widgets (Should ideally come from props or context)
 const stats = {
@@ -113,10 +114,10 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
   handleDeleteItem,
 }) => {
   if (isLoading) {
+    // Use the reusable LoadingSpinner component
     return (
-      // Improved loading spinner centered within the content area
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <LoadingSpinner size={48} color="text-indigo-500" /> {/* Use the spinner */}
       </div>
     );
   }

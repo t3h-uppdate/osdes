@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'; // Removed useState
 import { Link, useParams, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion'; // Import motion
 // Supabase client import removed, handled by the hook
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles to apply formatting
 import { useTranslations } from '../hooks/useTranslations';
@@ -10,6 +11,9 @@ import DOMPurify from 'dompurify'; // Import DOMPurify
 import DynamicPageSkeleton from './DynamicPageSkeleton'; // Import the skeleton component
 // Skeleton imports removed, handled by DynamicPageSkeleton
 // Page type import removed, handled by the hook
+import { pageVariants, pageTransition } from '../config/animations'; // Import shared animations
+
+// Removed local animation variants and transition
 
 // Component to render dynamic page content fetched by slug
 const DynamicPage: React.FC = () => {
@@ -61,7 +65,12 @@ const DynamicPage: React.FC = () => {
         {/* <meta name="description" content={page.meta_description || page.title} /> */}
       </Helmet>
       {/* Main container - Assuming CSS variables handle dark mode */}
-      <div
+      <motion.div
+        initial="initial"
+        animate="in"
+        exit="out"
+        variants={pageVariants}
+        transition={pageTransition}
         className="flex flex-col min-h-screen text-text ltr bg-gradient-to-br from-background to-background-secondary pb-20" // Relies on CSS vars from theme plugin
       >
         {/* Content container that grows - Removed text-center */}
@@ -95,7 +104,7 @@ const DynamicPage: React.FC = () => {
         {/* Alternative for plain text: <p className="text-lg leading-relaxed text-text">{page.content}</p> */}
       </div>
       {/* Footer removed as copyright is handled in MainSite via SiteSettingsContext */}
-    </div>
+    </motion.div>
   </> // Close the Fragment
   );
 };
