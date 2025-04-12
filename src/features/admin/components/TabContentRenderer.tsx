@@ -8,14 +8,14 @@ import SocialLinksSection from '../sections/SocialLinks/SocialLinksSection';
 import GeneralInfoSection from '../sections/GeneralInfo/GeneralInfoSection';
 import PagesSection from '../sections/Pages/PagesSection';
 import ImageUploader from '../sections/ImageManagement/components/ImageUploader'; // Corrected path
+import HeroImageManagementSection from '../sections/HeroImageManagement/HeroImageManagementSection'; // Added import
 
 // Import Utilities and Types (Adjust path as necessary)
 // Corrected utility and type imports
-import { renderFields, isValidTranslationKey } from '../sections/GeneralInfo/utils'; // Keep if renderFields is used elsewhere
+import { renderFields, isValidTranslationKey } from '../sections/GeneralInfo/utils'; // Keep if renderFields is used elsewhere - MAY NEED REFACTORING
 import { getStaticSectionName } from '../utils/helpers';
-import { TranslationsType } from '../../../types/translations';
-// Import SiteSettingsData type
-import { SiteSettingsData } from '../hooks/useAdminData'; // Assuming it's exported from hook
+// Import new types from useAdminData
+import { SiteConfigData, TranslationsData } from '../hooks/useAdminData';
 import LoadingSpinner from '../../../components/common/LoadingSpinner'; // Import the spinner
 
 // Mock data for dashboard widgets (Should ideally come from props or context)
@@ -29,13 +29,17 @@ const stats = {
 interface TabContentRendererProps {
   activeTab: string | null;
   isLoading: boolean;
-  translations: TranslationsType;
-  siteSettings: SiteSettingsData; // Add siteSettings prop
-  editingPath: string | null;
-  setEditingPath: (path: string | null) => void;
-  handleTranslationsChange: (path: (string | number)[], value: string | string[]) => void; // Use renamed handler
-  handleSiteSettingChange: (key: keyof SiteSettingsData, value: string) => void; // Add site settings handler
-  handleDeleteItem: (path: (string | number)[], index?: number) => void;
+  siteConfig: SiteConfigData;         // Use new site config type
+  translationsData: TranslationsData;   // Use new translations type (key-value pairs)
+  editingPath: string | null;           // Keep if used by other tabs
+  setEditingPath: (path: string | null) => void; // Keep if used by other tabs
+  handleSiteConfigChange: (key: keyof Omit<SiteConfigData, 'id' | 'updated_at'>, value: string | null) => void; // Use new handler
+  handleTranslationChange: (key: string, value: string) => void; // Use new handler
+  // Pass save-related props needed by specific tabs
+  saveStatus: string;
+  saveSiteConfig: () => Promise<void>; // Use new save function
+  saveTranslation: (key: string, value: string) => Promise<void>; // Add new save function
+  // handleDeleteItem is removed
 }
 
 // Helper function to create styled stat cards
@@ -105,14 +109,18 @@ const renderDashboardContent = () => {
 const TabContentRenderer: React.FC<TabContentRendererProps> = ({
   activeTab,
   isLoading,
-  translations,
-  siteSettings, // Destructure new prop
+  siteConfig,         // Use new prop name
+  translationsData,   // Use new prop name
   editingPath,
   setEditingPath,
-  handleTranslationsChange, // Use renamed handler
-  handleSiteSettingChange, // Destructure new handler
-  handleDeleteItem,
+  handleSiteConfigChange, // Use new prop name
+  handleTranslationChange, // Use new prop name
+  // Destructure new save-related props
+  saveStatus,
+  saveSiteConfig,
+  saveTranslation,
 }) => {
+  // isLoading is already destructured above
   if (isLoading) {
     // Use the reusable LoadingSpinner component
     return (
@@ -135,54 +143,44 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
     return <PagesSection />;
   }
   if (activeTab === 'media') {
-    return <ImageUploader />;
+    // Assuming ImageUploader doesn't need extra props for general use
+    // If it needs onUploadSuccess for specific actions elsewhere, it might need adjustment
+    return <ImageUploader onUploadSuccess={(url) => console.log('Uploaded to general media:', url)} />;
+  }
+  if (activeTab === 'heroImages') { // Added condition for hero images
+    return <HeroImageManagementSection />;
   }
   // Handle generalInfo explicitly here
   if (activeTab === 'generalInfo') {
-    // No need for isValidTranslationKey check for this specific tab
-    // const staticTabTitle = getStaticSectionName(activeTab); // Title is handled by AdminDashboard now
     return (
-      // Return the GeneralInfoSection directly, wrapped in a fragment if needed (though likely not here)
       <GeneralInfoSection
-          siteSettings={siteSettings}
-          handleSiteSettingChange={handleSiteSettingChange}
-          translations={translations}
-          handleTranslationsChange={handleTranslationsChange}
-          editingPath={editingPath}
-          setEditingPath={setEditingPath}
-          getStaticSectionName={getStaticSectionName}
+          siteConfig={siteConfig} // Pass new prop
+          translationsData={translationsData} // Pass new prop
+          handleSiteConfigChange={handleSiteConfigChange} // Pass new handler
+          handleTranslationChange={handleTranslationChange} // Pass new handler
+          saveSiteConfig={saveSiteConfig} // Pass new save function
+          saveTranslation={saveTranslation} // Pass new save function
+          // Pass other necessary props if GeneralInfoSection needs them
+          isLoading={isLoading}
+          saveStatus={saveStatus}
+          // editingPath={editingPath} // Pass if needed by GeneralInfoSection
+          // setEditingPath={setEditingPath} // Pass if needed by GeneralInfoSection
+          // getStaticSectionName={getStaticSectionName} // Pass if needed
         />
-      // No fragment needed here as it's a single component return
     );
   }
 
-  // Check if the activeTab corresponds to *other* sections that might use renderFields
-  if (isValidTranslationKey(activeTab)) { // Now activeTab cannot be 'generalInfo', 'projects', 'services' etc. here
-    // const staticTabTitle = getStaticSectionName(activeTab); // Title handled by AdminDashboard
-    return (
-      // Return within a Fragment as there's conditional logic inside
-      <>
-        {/* Render specific sections first */}
-        {activeTab === 'projects' ? (
-          <ProjectsSection />
-        ) : activeTab === 'services' ? (
-          <ServicesSection />
-        ) : // Fallback rendering logic for remaining valid translation keys using renderFields
-        translations.en[activeTab] ? ( // Check existence just in case
-          renderFields(
-              translations.en[activeTab], // The data object
-              [activeTab], // Base path
-              handleTranslationsChange, // Handler
-              editingPath, // Current editing state
-              setEditingPath,
-              undefined, // handleAdd - might need specific handlers
-              handleDeleteItem
-            )
-          ) : null // Fallback renders null if key doesn't exist in translations
-        }
-      </> // Ensure Fragment is closed correctly
-    );
+  // Add specific checks for other sections
+  if (activeTab === 'projects') {
+    return <ProjectsSection />; // Assuming ProjectsSection doesn't need props from here for now
   }
+  if (activeTab === 'services') {
+    return <ServicesSection />; // Assuming ServicesSection doesn't need props from here for now
+  }
+
+  // TODO: Refactor the rendering logic for any remaining tabs that might have used
+  // the old renderFields or isValidTranslationKey logic.
+  // For now, any other tab will fall through to the error message.
 
   // Fallback for invalid or unhandled tabs
   return (

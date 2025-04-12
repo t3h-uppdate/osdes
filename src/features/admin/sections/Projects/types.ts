@@ -8,6 +8,7 @@ export interface Project {
   live_url?: string; // Optional URL to the live project
   repo_url?: string; // Optional URL to the code repository
   sort_order?: number; // Optional: For controlling display order
+  is_published?: boolean; // Optional: To control visibility (true = published, false = draft)
 }
 
 // ProjectsSection interface removed as it represented the old JSONB structure

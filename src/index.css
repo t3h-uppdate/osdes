@@ -169,6 +169,82 @@ html.dark {
   margin-top: 5px;
 }
 
+/* Dark Mode Overrides for Quill */
+html.dark .quill-editor-wrapper .ql-toolbar.ql-snow {
+  background-color: var(--color-background-secondary); /* gray-800 */
+  border-color: var(--color-secondary); /* gray-600 or similar */
+  color: var(--color-text); /* gray-100 */
+}
+
+html.dark .quill-editor-wrapper .ql-container.ql-snow {
+  background-color: var(--color-background); /* gray-900 */
+  border-color: var(--color-secondary); /* gray-600 or similar */
+  color: var(--color-text); /* gray-100 */
+}
+
+html.dark .quill-editor-wrapper .ql-editor {
+  color: var(--color-text); /* Ensure editor text is light */
+}
+
+html.dark .quill-editor-wrapper .ql-editor.ql-blank::before {
+  color: var(--color-secondary); /* Lighter placeholder text */
+}
+
+/* Toolbar Icons */
+html.dark .quill-editor-wrapper .ql-snow .ql-stroke {
+  stroke: var(--color-text); /* Light icons */
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-fill {
+  fill: var(--color-text); /* Light icons */
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-picker {
+  color: var(--color-text); /* Light picker text */
+}
+
+/* Toolbar Active/Hover States */
+html.dark .quill-editor-wrapper .ql-snow .ql-picker:hover,
+html.dark .quill-editor-wrapper .ql-snow .ql-picker.ql-expanded {
+  color: var(--color-primary); /* Highlight color */
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-picker:hover .ql-stroke,
+html.dark .quill-editor-wrapper .ql-snow .ql-picker.ql-expanded .ql-stroke {
+  stroke: var(--color-primary);
+}
+
+html.dark .quill-editor-wrapper .ql-snow .ql-picker-options {
+  background-color: var(--color-background-secondary); /* Dark dropdown background */
+  border-color: var(--color-secondary);
+  color: var(--color-text);
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-picker-item:hover {
+  color: var(--color-primary);
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-picker-item.ql-selected {
+  color: var(--color-primary);
+}
+
+html.dark .quill-editor-wrapper .ql-snow .ql-tooltip {
+  background-color: var(--color-background-secondary);
+  border-color: var(--color-secondary);
+  color: var(--color-text);
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1); /* Lighter shadow */
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-tooltip input[type=text] {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-secondary);
+  color: var(--color-text);
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-tooltip a.ql-action::before {
+  background-color: var(--color-primary); /* Use primary color for action button */
+  color: var(--color-background); /* Ensure text contrast */
+  border-radius: 2px;
+  padding: 2px 4px;
+}
+html.dark .quill-editor-wrapper .ql-snow .ql-tooltip a.ql-remove::before {
+  color: var(--color-text);
+}
+
+
 /* ==========================================================================
    Custom Component Styles: Toast Notification
    ========================================================================== */

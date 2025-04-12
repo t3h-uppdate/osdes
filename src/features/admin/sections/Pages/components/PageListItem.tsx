@@ -5,13 +5,13 @@ import { Trash2, Edit, CheckCircle, EyeOff, ArrowUp, ArrowDown } from 'lucide-re
 // --- Types ---
 interface PageListItemProps {
   page: Page;
-  index: number;
+  index: number; // Keep index for disabling buttons, but don't use for move logic
   pageCount: number;
   isLoading: boolean;
   onEdit: (page: Page) => void;
   onDelete: (id: string) => void;
-  onMoveUp: (index: number) => void; // Re-added
-  onMoveDown: (index: number) => void; // Re-added
+  onMoveUp: (id: string) => void; // Changed to accept id
+  onMoveDown: (id: string) => void; // Changed to accept id
   onTogglePublish: (id: string, currentState: boolean) => void;
 }
 
@@ -78,18 +78,18 @@ const PageListItem: React.FC<PageListItemProps> = ({
       <div className="col-span-2 flex justify-end items-center space-x-1">
          {/* Move Up Button */}
          <button
-           onClick={() => onMoveUp(index)}
-           disabled={isLoading || index === 0}
-           className={`p-1 rounded ${isLoading || index === 0 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
+           onClick={() => page.id && onMoveUp(page.id)} // Pass page.id
+           disabled={isLoading || index === 0 || !page.id} // Disable if no id
+           className={`p-1 rounded ${isLoading || index === 0 || !page.id ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
            title="Move Up"
          >
            <ArrowUp size={18} />
          </button>
          {/* Move Down Button */}
          <button
-           onClick={() => onMoveDown(index)}
-           disabled={isLoading || index === pageCount - 1}
-           className={`p-1 rounded ${isLoading || index === pageCount - 1 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
+           onClick={() => page.id && onMoveDown(page.id)} // Pass page.id
+           disabled={isLoading || index === pageCount - 1 || !page.id} // Disable if no id
+           className={`p-1 rounded ${isLoading || index === pageCount - 1 || !page.id ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
            title="Move Down"
          >
            <ArrowDown size={18} />

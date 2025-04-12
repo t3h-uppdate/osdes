@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSiteSettings } from '../../../contexts/SiteSettingsContext'; // Import the hook
+import { useSite } from '../../../contexts/SiteSettingsContext'; // Import the renamed hook
 
 // Define the structure for theme color data (matches StyleData in StyleEditorTab)
 interface ThemeData {
@@ -77,7 +77,7 @@ const themeConfigs: Record<string, ThemeData> = {
 
 
 const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ onThemeSelect }) => {
-  const { theme: currentGlobalTheme, toggleTheme } = useSiteSettings(); // Get global theme state and toggle function
+  const { theme: currentGlobalTheme, toggleTheme } = useSite(); // Use the renamed hook
 
   // Available themes (UI definition) - Keep these for the switcher UI
   const themes = [

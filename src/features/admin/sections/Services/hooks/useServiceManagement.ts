@@ -96,7 +96,7 @@ export const useServiceManagement = () => {
             showToast("Supabase client not available.", 'error');
             return;
         }
-        setIsLoading(true);
+        // setIsLoading(true); // Remove loading state toggle for smoother onBlur updates
         try {
             const { data, error: dbError } = await supabase
                 .from(SERVICES_TABLE)
@@ -121,20 +121,17 @@ export const useServiceManagement = () => {
             console.error("Error updating service:", err);
             showToast(`Error updating service: ${err.message}`, 'error');
         } finally {
-            setIsLoading(false);
+            // setIsLoading(false); // Remove loading state toggle
         }
     }, [showToast]);
 
-    // Delete a service
-    const deleteService = useCallback(async (serviceId: string) => {
+    // Delete a service - Modified to return Promise and remove internal confirmation/toast
+    const deleteService = useCallback(async (serviceId: string): Promise<void> => {
         if (!supabase) {
-            showToast("Supabase client not available.", 'error');
-            return;
+            // Throw error instead of showing toast here
+            throw new Error("Supabase client not available.");
         }
-        // Optional: Add confirmation dialog
-        if (!window.confirm('Are you sure you want to delete this service?')) {
-            return;
-        }
+        // Confirmation should be handled by the component calling this function
 
         setIsLoading(true);
         try {
@@ -145,16 +142,97 @@ export const useServiceManagement = () => {
 
             if (dbError) throw dbError;
 
-            // Remove from local state
+            // Remove from local state on success
             setServices(prev => prev.filter(service => service.id !== serviceId));
-            showToast('Service deleted successfully!', 'success');
+            // Resolve the promise on success
+            // Toast will be handled by the component
         } catch (err: any) {
             console.error("Error deleting service:", err);
-            showToast(`Error deleting service: ${err.message}`, 'error');
+            // Reject the promise on error
+            // Toast will be handled by the component
+            throw err; // Re-throw the error to be caught by the caller
         } finally {
             setIsLoading(false);
         }
+    }, []); // Removed showToast dependency
+
+    // Toggle publish status
+    const toggleServiceStatus = useCallback(async (serviceId: string, currentStatus: boolean) => {
+        if (!supabase) {
+            showToast("Supabase client not available.", 'error');
+            return;
+        }
+        const newStatus = !currentStatus;
+        // Optimistically update UI first
+        setServices(prev =>
+            prev.map(s => (s.id === serviceId ? { ...s, is_published: newStatus } : s))
+        );
+        try {
+            const { error: dbError } = await supabase
+                .from(SERVICES_TABLE)
+                .update({ is_published: newStatus })
+                .eq('id', serviceId);
+
+            if (dbError) throw dbError;
+
+            showToast(`Service ${newStatus ? 'published' : 'set to draft'} successfully!`, 'success');
+        } catch (err: any) {
+            console.error("Error toggling service status:", err);
+            showToast(`Error toggling status: ${err.message}`, 'error');
+            // Revert optimistic update on error
+            setServices(prev =>
+                prev.map(s => (s.id === serviceId ? { ...s, is_published: currentStatus } : s))
+            );
+        }
+        // No loading state change needed for quick toggle
     }, [showToast]);
+
+    // Move service up or down
+    const moveService = useCallback(async (index: number, direction: 'up' | 'down') => {
+        if (!supabase) {
+            showToast("Supabase client not available.", 'error');
+            return;
+        }
+        const swapIndex = direction === 'up' ? index - 1 : index + 1;
+        if (swapIndex < 0 || swapIndex >= services.length) return;
+
+        const serviceToMove = services[index];
+        const serviceToSwapWith = services[swapIndex];
+
+        const orderToMove = serviceToMove.sort_order ?? index;
+        const orderToSwapWith = serviceToSwapWith.sort_order ?? swapIndex;
+
+        // Optimistically update UI
+        const optimisticServices = [...services];
+        optimisticServices[index] = { ...serviceToSwapWith, sort_order: orderToMove };
+        optimisticServices[swapIndex] = { ...serviceToMove, sort_order: orderToSwapWith };
+        setServices(optimisticServices.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)));
+
+        setIsLoading(true);
+        try {
+            // Perform updates sequentially
+            const { error: error1 } = await supabase
+                .from(SERVICES_TABLE)
+                .update({ sort_order: orderToSwapWith })
+                .eq('id', serviceToMove.id);
+            if (error1) throw error1;
+
+            const { error: error2 } = await supabase
+                .from(SERVICES_TABLE)
+                .update({ sort_order: orderToMove })
+                .eq('id', serviceToSwapWith.id);
+            if (error2) throw error2;
+
+            showToast(`Service moved ${direction} successfully.`, 'success');
+            // Optional: await fetchServices();
+        } catch (err: any) {
+            console.error(`Error moving service ${direction}:`, err);
+            showToast(`Failed to reorder service: ${err.message}`, 'error');
+            await fetchServices(); // Revert optimistic update on error
+        } finally {
+            setIsLoading(false);
+        }
+    }, [services, showToast, fetchServices]); // Added fetchServices dependency
 
     return {
         services,
@@ -164,5 +242,7 @@ export const useServiceManagement = () => {
         addService,
         updateService,
         deleteService,
+        toggleServiceStatus, // Export new function
+        moveService,         // Export new function
     };
 };

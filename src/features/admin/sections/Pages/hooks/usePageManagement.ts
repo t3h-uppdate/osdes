@@ -92,8 +92,9 @@ export const usePageManagement = () => {
         showToast('Page updated successfully!', 'success');
       } else {
         // Insert new page
-        // Assign an initial order value (e.g., current timestamp or max order + 1)
-        const newOrder = Date.now(); // Using timestamp for simplicity
+        // Calculate the next order number based on existing pages
+        const maxOrder = pages.reduce((max, p) => Math.max(max, p.order ?? 0), 0);
+        const newOrder = maxOrder + 1;
         const dataToInsert = { ...pageData, order: newOrder };
 
         const { error } = await supabase
@@ -211,24 +212,36 @@ export const usePageManagement = () => {
     return supabase.from(PAGES_TABLE).update({ order: newOrder }).eq('id', pageId);
   }, [supabase, showToast]); // Added showToast dependency
 
-  const handleMove = useCallback(async (index: number, direction: 'up' | 'down') => {
+  const handleMove = useCallback(async (pageId: string, direction: 'up' | 'down') => {
+    // Find the actual index in the full 'pages' array
+    const index = pages.findIndex(p => p.id === pageId);
+    if (index === -1) {
+      console.error("Cannot move page: ID not found in the current list.", { pageId });
+      showToast("Error: Could not find the page to move.", 'error');
+      return;
+    }
+
     const pageToMove = pages[index];
     const swapIndex = direction === 'up' ? index - 1 : index + 1;
 
-    if (swapIndex < 0 || swapIndex >= pages.length || !pageToMove?.id) {
-      console.warn("Invalid move operation:", { index, direction, pageCount: pages.length });
-      return; // Cannot move outside bounds or if page/ID is missing
+    // Check bounds using the full pages array length
+    if (swapIndex < 0 || swapIndex >= pages.length) {
+      console.warn("Invalid move operation: Out of bounds.", { index, direction, pageCount: pages.length });
+      return; // Cannot move outside bounds
     }
 
     const pageToSwapWith = pages[swapIndex];
-    if (!pageToSwapWith?.id) {
-        console.warn("Invalid move operation: Swap target missing ID", { swapIndex, pageToSwapWith });
-        return; // Cannot swap if the target page ID is missing
+
+    // Ensure both pages and their orders are valid before proceeding
+    if (!pageToMove?.id || pageToMove.order === undefined || pageToMove.order === null ||
+        !pageToSwapWith?.id || pageToSwapWith.order === undefined || pageToSwapWith.order === null) {
+      console.error("Invalid move operation: Missing ID or order value.", { pageToMove, pageToSwapWith });
+      showToast("Error: Cannot move page due to missing data.", 'error');
+      return;
     }
 
-    // Use current order values, default to index if null/undefined
-    const orderToMove = pageToMove.order ?? index;
-    const orderToSwap = pageToSwapWith.order ?? swapIndex;
+    const orderToMove = pageToMove.order;
+    const orderToSwap = pageToSwapWith.order;
 
     setIsLoading(true);
     try {
@@ -254,8 +267,9 @@ export const usePageManagement = () => {
     // fetchPages sets loading to false on success
   }, [pages, updatePageOrder, showToast, fetchPages]); // Added dependencies
 
-  const handleMoveUp = useCallback((index: number) => handleMove(index, 'up'), [handleMove]);
-  const handleMoveDown = useCallback((index: number) => handleMove(index, 'down'), [handleMove]);
+  // Update handlers to accept pageId
+  const handleMoveUp = useCallback((pageId: string) => handleMove(pageId, 'up'), [handleMove]);
+  const handleMoveDown = useCallback((pageId: string) => handleMove(pageId, 'down'), [handleMove]);
 
 
   // --- Toggle Publish Status ---

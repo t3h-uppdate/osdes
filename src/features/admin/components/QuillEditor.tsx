@@ -179,10 +179,10 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   // .ql-snow .ql-formats { margin-right: 8px !important; margin-bottom: 4px; } /* Adjust spacing when wrapped */
 
   return (
-    <div className={`quill-editor-container ${className}`}>
+    <div className={`quill-editor-container ${className} dark:text-gray-300`}> {/* Added dark mode text color for slider */}
       {/* Wrapper div controls the height */}
       <div
-        className="quill-editor-wrapper border border-gray-300 rounded-md overflow-hidden" // Add border and rounding here
+        className="quill-editor-wrapper border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden" // Added dark mode border
         style={{ ...style, height: `${editorHeight}px`, display: 'flex', flexDirection: 'column' }} // Apply dynamic height, use flex column
       >
         <ReactQuill
@@ -198,7 +198,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         />
       </div>
       {/* Height Adjustment Slider */}
-      <div className="flex items-center space-x-2 mt-2 text-gray-600">
+      <div className="flex items-center space-x-2 mt-2 text-gray-600 dark:text-gray-400"> {/* Added dark mode text color */}
         <Minimize2 size={16} />
         <input
           type="range"
@@ -210,7 +210,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
           aria-label="Adjust editor height"
         />
         <Maximize2 size={16} />
-        <span className="text-xs w-12 text-right">{editorHeight}px</span>
+        <span className="text-xs w-12 text-right">{editorHeight}px</span> {/* Text color handled by parent div */}
       </div>
     </div>
   );

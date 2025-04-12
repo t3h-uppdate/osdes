@@ -1,36 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Home, Menu, X, Sun, Moon } from 'lucide-react';
-import { SiteSettingsData } from '../../features/admin/hooks/useAdminData';
-import { TranslationsType } from '../../types/translations';
+// Import the correct types
+import { SiteConfigData } from '../../features/admin/hooks/useAdminData';
 import { Page } from '../../features/admin/sections/Pages/types';
-import { useSiteSettings } from '../../contexts/SiteSettingsContext'; // Import the context hook
+// No need to import useSiteSettings here, props come from MainSite
 
-type Language = 'en' | 'sv' | 'ar';
+// Define the type for the translation function passed as a prop
+type TFunction = (key: string, defaultValue?: string) => string;
+type Language = 'en' | 'sv' | 'ar'; // Keep if language switcher is used
 
 interface NavigationProps {
-    // isDarkMode and setIsDarkMode are removed as they come from context now
+    theme: 'light' | 'dark'; // Receive theme state
+    toggleTheme: () => void; // Receive toggle function
     language: Language;
     handleLanguageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    settings: SiteSettingsData;
-    t: TranslationsType['en'];
+    siteConfig: SiteConfigData | null; // Use new SiteConfigData type, allow null
+    t: TFunction; // Use the TFunction type
     dynamicPages: Page[];
     isMenuOpen: boolean;
     setIsMenuOpen: (isOpen: boolean) => void;
 }
 
 const Navigation: React.FC<NavigationProps> = ({
-    // isDarkMode, setIsDarkMode removed from destructuring
+    theme, // Destructure theme
+    toggleTheme, // Destructure toggleTheme
     language,
     handleLanguageChange,
-    settings,
-    t,
+    siteConfig, // Use siteConfig
+    t, // Use t function
     dynamicPages,
     isMenuOpen,
     setIsMenuOpen,
 }) => {
-    const { theme, toggleTheme } = useSiteSettings(); // Get theme state and toggle function from context
-    const isDarkMode = theme === 'dark'; // Derive boolean from theme state
+    // Derive isDarkMode from theme prop
+    const isDarkMode = theme === 'dark';
 
     const [showNav, setShowNav] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
@@ -67,18 +71,25 @@ const Navigation: React.FC<NavigationProps> = ({
                 <div className="flex justify-between h-16">
                     {/* Logo/Title Section */}
                     <div className="flex items-center">
-                        <Home className={`h-8 w-8 ${isDarkMode ? 'text-white' : 'text-blue-600'}`} />
-                        <span className={`ml-2 text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{settings.site_title || 'OS Design'}</span>
+                        {/* Optionally use logo from siteConfig */}
+                        {siteConfig?.logo_url ? (
+                            <img src={siteConfig.logo_url} alt={t('site.title', 'Site Logo')} className="h-8 w-auto" />
+                        ) : (
+                            <Home className={`h-8 w-8 ${isDarkMode ? 'text-white' : 'text-blue-600'}`} />
+                        )}
+                        <span className={`ml-2 text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{t('site.title', 'OS Design')}</span>
                     </div>
 
-                    {/* Desktop Navigation Links */}
+                    {/* Desktop Navigation Links - Use t function */}
                     <div className="hidden md:flex items-center space-x-8">
-                        <a href="#home" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.site_title}</a>
-                        <a href="#services" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.services?.title}</a>
-                        <a href="#projects" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.projects?.title}</a>
-                        <a href="#blog" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.blog?.title}</a>
-                        <a href="#about" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.about_description ? 'About' : t.about?.title}</a>
-                        <a href="#contact" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.contact?.title}</a>
+                        <a href="#home" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.home', 'Home')}</a>
+                        <a href="#services" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('services.title', 'Services')}</a>
+                        <a href="#projects" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('projects.title', 'Projects')}</a>
+                        <a href="#blog" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.blog', 'Blog')}</a>
+                        <a href="#about" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('about.title', 'About')}</a>
+                        <a href="#contact" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('contact.title', 'Contact')}</a>
+                        {/* Add dynamic pages if needed */}
+                        {/* {dynamicPages.map(page => ...)} */}
                     </div>
 
                     {/* Right side controls */}
@@ -119,16 +130,18 @@ const Navigation: React.FC<NavigationProps> = ({
                 </div>
             </div>
 
-            {/* Mobile Navigation Menu */}
+            {/* Mobile Navigation Menu - Use t function */}
             {isMenuOpen && (
                 <div className="md:hidden" id="mobile-menu">
                     <div className={`px-2 pt-2 pb-3 space-y-1 sm:px-3 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                        <a href="#home" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.site_title}</a>
-                        <a href="#services" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.services?.title}</a>
-                        <a href="#projects" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.projects?.title}</a>
-                        <a href="#blog" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.blog?.title}</a>
-                        <a href="#about" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{settings.about_description ? 'About' : t.about?.title}</a>
-                        <a href="#contact" className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.contact?.title}</a>
+                        <a href="#home" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.home', 'Home')}</a>
+                        <a href="#services" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('services.title', 'Services')}</a>
+                        <a href="#projects" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('projects.title', 'Projects')}</a>
+                        <a href="#blog" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.blog', 'Blog')}</a>
+                        <a href="#about" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('about.title', 'About')}</a>
+                        <a href="#contact" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('contact.title', 'Contact')}</a>
+                        {/* Add dynamic pages if needed */}
+                        {/* {dynamicPages.map(page => ...)} */}
                     </div>
                 </div>
             )}

@@ -1,6 +1,27 @@
 import React from 'react';
-import { Loader2, AlertTriangle, Tag } from 'lucide-react'; // Updated icons
+// Import necessary Lucide icons - mirror the list from admin for consistency
+import { Loader2, AlertTriangle, Tag, Server, Database, Code, Cloud, Terminal, Settings, Wrench, Shield, Network, Cpu, HardDrive, Smartphone, Monitor, Laptop, Keyboard, Mouse, Printer, Camera, Video, Mic, Mail, MessageSquare, Users, User, Briefcase, Book, FileText, Folder, Image, Link, Globe, MapPin, Navigation, Package, Truck, ShoppingCart, CreditCard, DollarSign, TrendingUp, BarChart, PieChart, Activity } from 'lucide-react';
 import { useFetchServices, ServiceItem } from '../hooks/useFetchServices'; // Import hook and type
+
+// Helper to get Lucide component by name (case-insensitive) - similar to admin
+const LucideIconComponents: { [key: string]: React.ComponentType<any> } = {
+  Server, Database, Code, Cloud, Terminal, Settings, Wrench, Shield, Network, Cpu, HardDrive,
+  Smartphone, Monitor, Laptop, Keyboard, Mouse, Printer, Camera, Video, Mic, Mail, MessageSquare,
+  Users, User, Briefcase, Book, FileText, Folder, Image, Link, Globe, MapPin, Navigation, Package,
+  Truck, ShoppingCart, CreditCard, DollarSign, TrendingUp, BarChart, PieChart, Activity,
+  Tag, // Include the default Tag icon
+  // Add other imported icons if needed
+};
+
+const getIconComponent = (iconName: string | null | undefined): React.ComponentType<any> => {
+  if (!iconName) return Tag; // Default to Tag icon if none provided
+  // Ensure PascalCase for matching keys in LucideIconComponents
+  const upperCaseName = iconName.charAt(0).toUpperCase() + iconName.slice(1).toLowerCase();
+  // More robust check: handle potential variations like 'cpu' vs 'Cpu'
+  const component = Object.keys(LucideIconComponents).find(key => key.toLowerCase() === iconName.toLowerCase());
+  return component ? LucideIconComponents[component] : Tag; // Return found component or default Tag
+};
+
 
 // Define props for the component - simplified
 interface ServicesSectionProps {
@@ -71,12 +92,11 @@ const ServicesSection: React.FC<ServicesSectionProps> = ({
                     <div>
                       {/* Render icon dynamically */}
                       <div className="absolute h-12 w-12 flex items-center justify-center rounded-md bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
-                        {/* Basic icon rendering: Display icon string or a default icon */}
-                        {service.icon ? (
-                          <span className="text-xs truncate px-1" title={service.icon}>{service.icon}</span> // Display string, maybe truncate
-                        ) : (
-                          <Tag className="h-6 w-6" /> // Default icon if none provided
-                        )}
+                        {/* Render the actual Lucide icon component */}
+                        {(() => {
+                          const IconComponent = getIconComponent(service.icon);
+                          return <IconComponent className="h-6 w-6" aria-hidden="true" />;
+                        })()}
                       </div>
                       <p className="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">{service.title}</p>
                     </div>

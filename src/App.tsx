@@ -6,9 +6,9 @@ import AdminDashboard from './features/admin/views/AdminDashboard'; // Import th
 import LoginPage from './features/admin/views/LoginPage';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import DynamicPage from './pages/DynamicPage'; // Import the DynamicPage component
-import NotFoundPage from './pages/NotFoundPage'; // Import a 404 page (assuming it exists or will be created)
+import NotFoundPage from './pages/NotFoundPage';
 import { NotificationProvider } from './contexts/NotificationContext';
-import { SiteSettingsProvider } from './contexts/SiteSettingsContext';
+import { SiteProvider } from './contexts/SiteSettingsContext'; // Import the renamed provider
 
 // We need a component to get location because useLocation can only be used inside a Router
 function AnimatedRoutes() {
@@ -38,12 +38,11 @@ function AnimatedRoutes() {
 function App() {
   return (
     <NotificationProvider>
-      <SiteSettingsProvider> {/* Wrap with SiteSettingsProvider */}
-        <Router>
-          <AnimatedRoutes /> {/* Use the component that contains animated routes */}
-        </Router>
-        {/* ToastNotification might be rendered here or within NotificationProvider */}
-      </SiteSettingsProvider>
+      {/* SiteProvider is already wrapping App in main.tsx, removed from here */}
+      <Router>
+        <AnimatedRoutes /> {/* Use the component that contains animated routes */}
+      </Router>
+      {/* ToastNotification might be rendered here or within NotificationProvider */}
     </NotificationProvider>
   );
 }

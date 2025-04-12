@@ -1,6 +1,7 @@
 import React from 'react';
+import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react'; // Import icons
 
-export type ToastType = 'success' | 'error' | null;
+export type ToastType = 'success' | 'error' | 'warning' | null; // Add 'warning'
 
 interface ToastNotificationProps {
   message: string | null;
@@ -10,12 +11,26 @@ interface ToastNotificationProps {
 const ToastNotification: React.FC<ToastNotificationProps> = ({ message, type }) => {
   if (!message || !type) return null;
 
-  const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-  const icon = type === 'success' ? (
-    <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-  ) : (
-    <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-  );
+  let bgColor = '';
+  let icon = null;
+
+  switch (type) {
+    case 'success':
+      bgColor = 'bg-green-500';
+      icon = <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0" />;
+      break;
+    case 'error':
+      bgColor = 'bg-red-500';
+      icon = <XCircle className="w-5 h-5 mr-2 flex-shrink-0" />;
+      break;
+    case 'warning':
+      bgColor = 'bg-yellow-500'; // Use yellow for warning
+      icon = <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0" />;
+      break;
+    default:
+      return null; // Should not happen if type is validated
+  }
+
 
   // Ensure animation class is present in a global CSS file (e.g., index.css)
   // .animate-fade-in-out { animation: fadeInOut 3s ease-in-out forwards; }

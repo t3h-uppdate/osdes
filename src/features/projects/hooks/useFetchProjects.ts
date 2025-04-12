@@ -22,6 +22,7 @@ export const useFetchProjects = () => {
             const { data, error: dbError } = await supabase
                 .from(PROJECTS_TABLE)
                 .select('*')
+                .eq('is_published', true) // Only fetch published projects
                 .order('sort_order', { ascending: true, nullsFirst: false }); // Order by sort_order
 
             if (dbError) throw dbError;

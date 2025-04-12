@@ -1,72 +1,106 @@
-import React from 'react';
-// Import SiteSettingsData type from the hook file or a shared types file if extracted
-import { SiteSettingsData } from '../../hooks/useAdminData'; // Assuming it's exported from hook
-import { TranslationsType } from '../../../../types/translations';
+import React, { useState } from 'react';
+// Icons
+import { Info, Image as ImageIcon, User, Copyright, Phone, MessageSquare, Pencil } from 'lucide-react';
+// Import new types from useAdminData
+import { SiteConfigData, TranslationsData } from '../../hooks/useAdminData';
 
-// Define the props the component will accept, now including siteSettings data and handler
+// Define the props the component will accept based on the new hook structure
 interface GeneralInfoSectionProps {
-  siteSettings: SiteSettingsData; // Data from site_settings table
-  handleSiteSettingChange: (key: keyof SiteSettingsData, value: string) => void; // Handler for site_settings
-  translations: TranslationsType; // Still needed for fields not in site_settings (e.g., contact form labels)
-  handleTranslationsChange: (path: (string | number)[], value: string) => void; // Renamed handler from hook
-  editingPath: string | null; // State for which field is being edited
-  setEditingPath: (path: string | null) => void; // Function to control editing state
-  getStaticSectionName: (key: string) => string; // Utility to get display names
+  siteConfig: SiteConfigData;
+  translationsData: TranslationsData;
+  handleSiteConfigChange: (key: keyof Omit<SiteConfigData, 'id' | 'updated_at'>, value: string | null) => void;
+  handleTranslationChange: (key: string, value: string) => void;
+  saveSiteConfig: () => Promise<void>;
+  saveTranslation: (key: string, value: string) => Promise<void>; // Add this if needed for individual saves
+  isLoading: boolean;
+  saveStatus: string;
 }
 
-// Modify EditableField to accept either handler type via a union or separate props
+// Refactored EditableField component
 const EditableField: React.FC<{
-  fieldKey: string; // Key for display label, URL check etc. (e.g., 'siteTitle', 'heroSubtitle', 'nameLabel')
-  dbKey?: keyof SiteSettingsData; // The actual key in the siteSettings object (e.g., 'site_title')
+  label: string; // Display label
+  identifier: string; // Unique key for this field (e.g., 'logo_url', 'site.title')
   value: string;
-  path?: (string | number)[]; // Path for translations (e.g., ['contact', 'nameLabel'])
-  // Pass the correct handler based on the data source
-  onChangeHandler: (value: string) => void;
-  editingPath: string | null; // Unique identifier of the field being edited (can be dbKey or path.join('.'))
-  setEditingPath: (path: string | null) => void;
-}> = ({ fieldKey, dbKey, value, path, onChangeHandler, editingPath, setEditingPath }) => {
-  // Use dbKey if available for settings, otherwise construct from path for translations
-  const editIdentifier = dbKey || (path ? path.join('.') : fieldKey);
-  const isEditing = editingPath === editIdentifier;
-  const label = fieldKey.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
-  const isUrlField = /url|link/i.test(fieldKey);
+  onChange: (value: string) => void; // Generic onChange handler
+  onSave?: () => void; // Optional: Handler to trigger save on blur/enter
+  isEditing: boolean;
+  setEditingIdentifier: (identifier: string | null) => void;
+  isUrl?: boolean; // Optional flag for URL input type
+  isTextarea?: boolean; // Optional flag for textarea
+}> = ({ label, identifier, value, onChange, onSave, isEditing, setEditingIdentifier, isUrl = false, isTextarea = false }) => {
+  const [isHovering, setIsHovering] = useState(false);
+
+  const handleBlur = () => {
+    setEditingIdentifier(null);
+    onSave?.(); // Trigger save if handler is provided
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => { // Added type to event
+    // Check it's not textarea before saving on Enter
+    // Use type assertion to access tagName safely
+    const targetElement = e.target as (HTMLInputElement | HTMLTextAreaElement);
+    if (e.key === 'Enter' && !isTextarea && targetElement.tagName !== 'TEXTAREA') {
+        handleBlur();
+    } else if (e.key === 'Escape') {
+        setEditingIdentifier(null); // Cancel editing on Escape
+        // Optionally revert changes here if needed
+    }
+  };
 
   return (
-    // Use editIdentifier as the key for React reconciliation
-    <div key={editIdentifier} className="mb-4">
-      <label htmlFor={editIdentifier} className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize mb-1">
+    <div key={identifier} className="mb-4">
+      <label htmlFor={identifier} className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize mb-1">
         {label}
       </label>
       {isEditing ? (
-        isUrlField ? (
+        isUrl ? (
           <input
             type="url"
-            id={editIdentifier}
-            name={editIdentifier}
+            id={identifier}
+            name={identifier}
             className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
             value={value}
-            onChange={(e) => onChangeHandler(e.target.value)} // Use the passed handler
-            onBlur={() => setEditingPath(null)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} // Added type
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
             autoFocus
           />
-        ) : (
+        ) : isTextarea ? (
           <textarea
-            id={editIdentifier}
-            name={editIdentifier}
+            id={identifier}
+            name={identifier}
             rows={value.length > 100 ? 5 : 3}
             className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
             value={value}
-            onChange={(e) => onChangeHandler(e.target.value)} // Use the passed handler
-            onBlur={() => setEditingPath(null)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} // Added type
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown} // Allow Escape, but not Enter save for textarea
+            autoFocus
+          />
+        ) : (
+           <input
+            type="text"
+            id={identifier}
+            name={identifier}
+            className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
+            value={value}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} // Added type
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
             autoFocus
           />
         )
       ) : (
         <div
-          className="block w-full flex-1 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 min-h-[40px] whitespace-pre-wrap text-gray-800 dark:text-gray-200 transition-colors duration-150 ease-in-out break-words"
-          onClick={() => setEditingPath(editIdentifier)} // Use the identifier to start editing
+          className="relative block w-full flex-1 rounded-md p-2 cursor-pointer min-h-[40px] whitespace-pre-wrap text-gray-800 dark:text-gray-200 transition-colors duration-150 ease-in-out break-words group hover:bg-gray-100 dark:hover:bg-gray-700 hover:underline"
+          onClick={() => setEditingIdentifier(identifier)}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
         >
           {value || <span className="text-gray-400 dark:text-gray-500 italic">Click to edit...</span>}
+          {isHovering && (
+            <Pencil size={14} className="absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
         </div>
       )}
     </div>
@@ -75,209 +109,132 @@ const EditableField: React.FC<{
 
 
 const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
-  siteSettings,
-  handleSiteSettingChange,
-  translations,
-  handleTranslationsChange, // Use the renamed prop from the hook
-  editingPath,
-  setEditingPath,
-  getStaticSectionName,
+  siteConfig,
+  translationsData,
+  handleSiteConfigChange,
+  handleTranslationChange,
+  saveSiteConfig,
+  saveTranslation, // Destructure the new save function
+  isLoading,
+  saveStatus,
 }) => {
-  // No more local state or fetching needed here, data comes from props (useAdminData hook)
+  // Local state to manage which field is currently being edited
+  const [editingIdentifier, setEditingIdentifier] = useState<string | null>(null);
 
-  // Extract data still coming from translations
-  const contactData = translations.en.contact;
-  // uiData is partially handled by siteSettings, partially by translations if needed
+  // Calculate button disabled state locally based on passed props
+  const isSaveDisabled = isLoading || saveStatus.includes('Saving');
 
-  // Define mappings from siteSettings keys (DB columns) to display keys
-  // We'll use these for labels and deciding which fields to show
-  const siteSettingFields: { [K in keyof SiteSettingsData]?: string } = {
-    site_title: 'Site Title',
-    site_role: 'Site Role',
-    logo_url: 'Logo Url',
-    hero_title: 'Hero Title',
-    hero_title2: 'Hero Title 2',
-    hero_subtitle: 'Hero Subtitle',
-    hero_cta_button_text: 'Hero Button Text',
-    about_description: 'About Description',
-    footer_copyright: 'Footer Copyright',
-    contact_phone: 'Contact Phone',
-    contact_address: 'Contact Address',
-    contact_mail: 'Contact Mail',
-  };
+  // Helper to get translation value or default
+  const getTranslation = (key: string, defaultValue: string = '') => translationsData[key] ?? defaultValue;
+
+  // Define the fields to display, mapping labels to keys and handlers
+  // This makes rendering cleaner
+  const fieldsConfig = [
+    // Site Config Fields
+    { section: 'generalInfo', label: 'Logo Url', identifier: 'logo_url', type: 'config', isUrl: true },
+    // Translation Fields (using dot notation keys)
+    { section: 'generalInfo', label: 'Site Title', identifier: 'site.title', type: 'translation' },
+    { section: 'generalInfo', label: 'Site Role', identifier: 'site.role', type: 'translation' },
+    { section: 'hero', label: 'Hero Title', identifier: 'hero.title', type: 'translation' },
+    { section: 'hero', label: 'Hero Title 2', identifier: 'hero.title2', type: 'translation' },
+    { section: 'hero', label: 'Hero Subtitle', identifier: 'hero.subtitle', type: 'translation', isTextarea: true },
+    { section: 'hero', label: 'Hero Button Text', identifier: 'hero.ctaButtonText', type: 'translation' }, // Adjusted key if needed
+    { section: 'about', label: 'About Description', identifier: 'about.description', type: 'translation', isTextarea: true },
+    { section: 'footer', label: 'Footer Copyright', identifier: 'footer.copyright', type: 'translation' },
+    { section: 'contactInfo', label: 'Contact Phone', identifier: 'contact.phone', type: 'translation' },
+    { section: 'contactInfo', label: 'Contact Address', identifier: 'contact.address', type: 'translation' },
+    { section: 'contactInfo', label: 'Contact Email', identifier: 'contact.email', type: 'translation' }, // Adjusted key if needed
+    // Contact Form Fields (assuming keys like 'contact.form.nameLabel')
+    { section: 'contactForm', label: 'Name Label', identifier: 'contact.form.nameLabel', type: 'translation' },
+    { section: 'contactForm', label: 'Email Label', identifier: 'contact.form.emailLabel', type: 'translation' },
+    { section: 'contactForm', label: 'Message Label', identifier: 'contact.form.messageLabel', type: 'translation' },
+    { section: 'contactForm', label: 'Submit Button', identifier: 'contact.form.submitButton', type: 'translation' },
+    // Add other translation keys as needed
+  ];
+
+  // Group fields by section for rendering
+  const groupedFields = fieldsConfig.reduce((acc, field) => {
+    const section = field.section; // Use defined section key
+    if (!acc[section]) {
+      acc[section] = [];
+    }
+    acc[section].push(field);
+    return acc;
+  }, {} as Record<string, typeof fieldsConfig>);
+
+
+  // Function to render a section card
+  const renderSectionCard = (sectionKey: string, title: string, icon: React.ReactNode) => (
+    <div key={sectionKey} className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border border-gray-200 dark:border-gray-600 space-y-4">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4 flex items-center gap-2">
+        {icon}
+        {title}
+      </h3>
+      {groupedFields[sectionKey]?.map(field => (
+        <EditableField
+          key={field.identifier}
+          label={field.label}
+          identifier={field.identifier}
+          value={field.type === 'config'
+            // Type assertion needed here as identifier might not be a valid key directly
+            // Ensure value is always a string for EditableField
+            ? String(siteConfig[field.identifier as keyof SiteConfigData] ?? '')
+            : getTranslation(field.identifier)}
+          onChange={field.type === 'config'
+            // Type assertion needed here as well
+            ? (v: string) => handleSiteConfigChange(field.identifier as keyof Omit<SiteConfigData, 'id' | 'updated_at'>, v)
+            : (v: string) => handleTranslationChange(field.identifier, v)}
+          // Optionally trigger individual save on blur for translations
+          onSave={field.type === 'translation' ? () => saveTranslation(field.identifier, getTranslation(field.identifier)) : undefined}
+          isEditing={editingIdentifier === field.identifier}
+          setEditingIdentifier={setEditingIdentifier}
+          isUrl={field.isUrl}
+          isTextarea={field.isTextarea}
+        />
+      ))}
+    </div>
+  );
 
   return (
-    // Add dark mode text color to the main container if needed, though EditableField handles most text
+    // Main grid container
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-gray-900 dark:text-gray-100">
 
-      {/* Column 1: General Site Info & Hero */}
+      {/* Column 1 */}
       <div className="space-y-6">
-
-        {/* General Site Info Section - Uses siteSettings */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
-            {getStaticSectionName('generalInfo')}
-          </h3>
-          {/* Render fields directly from siteSettings */}
-          <EditableField
-            fieldKey="Site Title"
-            dbKey="site_title"
-            value={siteSettings.site_title ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('site_title', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-          <EditableField
-            fieldKey="Site Role"
-            dbKey="site_role"
-            value={siteSettings.site_role ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('site_role', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-          <EditableField
-            fieldKey="Logo Url"
-            dbKey="logo_url"
-            value={siteSettings.logo_url ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('logo_url', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-        </div>
-
-        {/* Hero Section - Uses siteSettings */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
-            {getStaticSectionName('hero')}
-          </h3>
-           <EditableField
-            fieldKey="Hero Title"
-            dbKey="hero_title"
-            value={siteSettings.hero_title ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('hero_title', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-           <EditableField
-            fieldKey="Hero Title 2"
-            dbKey="hero_title2"
-            value={siteSettings.hero_title2 ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('hero_title2', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-           <EditableField
-            fieldKey="Hero Subtitle"
-            dbKey="hero_subtitle"
-            value={siteSettings.hero_subtitle ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('hero_subtitle', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-           <EditableField
-            fieldKey="Hero Button Text"
-            dbKey="hero_cta_button_text"
-            value={siteSettings.hero_cta_button_text ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('hero_cta_button_text', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-          {/* Removed incorrect closing tags and logic from previous attempt */}
-        </div>
+        {renderSectionCard('generalInfo', 'General Site Info', <Info size={18} className="text-blue-500" />)}
+        {renderSectionCard('hero', 'Hero Section', <ImageIcon size={18} className="text-purple-500" />)}
       </div>
 
-      {/* Column 2: About, Footer, Contact Info, Contact Form Labels */}
+      {/* Column 2 */}
       <div className="space-y-6">
-        {/* About Section - Uses siteSettings */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
-            {getStaticSectionName('about')}
-          </h3>
-          <EditableField
-            fieldKey="About Description"
-            dbKey="about_description"
-            value={siteSettings.about_description ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('about_description', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-          {/* Removed incorrect closing tags and logic from previous attempt */}
-        </div>
+        {renderSectionCard('about', 'About Section', <User size={18} className="text-green-500" />)}
+        {renderSectionCard('footer', 'Footer Section', <Copyright size={18} className="text-gray-500" />)}
+        {renderSectionCard('contactInfo', 'Contact Info', <Phone size={18} className="text-red-500" />)}
+        {renderSectionCard('contactForm', 'Contact Form Text', <MessageSquare size={16} className="text-yellow-500" />)}
+      </div>
 
-        {/* Footer Section - Uses siteSettings */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
-            {getStaticSectionName('footer')}
-          </h3>
-           <EditableField
-            fieldKey="Footer Copyright"
-            dbKey="footer_copyright"
-            value={siteSettings.footer_copyright ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('footer_copyright', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-         {/* Removed incorrect closing tags and logic from previous attempt */}
-        </div>
-
-        {/* Contact Section - Mixed: Info from siteSettings, Labels from translations */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4">
-            {getStaticSectionName('contact')} / Info
-          </h3>
-
-          {/* Contact Info Fields - Use siteSettings */}
-           <EditableField
-            fieldKey="Contact Phone"
-            dbKey="contact_phone"
-            value={siteSettings.contact_phone ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('contact_phone', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-           <EditableField
-            fieldKey="Contact Address"
-            dbKey="contact_address"
-            value={siteSettings.contact_address ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('contact_address', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-           <EditableField
-            fieldKey="Contact Mail"
-            dbKey="contact_mail"
-            value={siteSettings.contact_mail ?? ''}
-            onChangeHandler={(v) => handleSiteSettingChange('contact_mail', v)}
-            editingPath={editingPath}
-            setEditingPath={setEditingPath}
-          />
-
-          {/* Contact Form Labels/Placeholders - Use translations */}
-          <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 pt-4">Contact Form Text</h4>
-          {contactData ? (
-            Object.entries(contactData).map(([key, value]) => {
-              // Exclude the main title, render other strings
-              if (key !== 'title' && typeof value === 'string') {
-                const fieldPath = ['contact', key];
-                return (
-                  <EditableField
-                    key={`contact-${key}`}
-                    fieldKey={key} // Use the key from translations (e.g., 'nameLabel')
-                    value={value}
-                    path={fieldPath} // Pass the path for translations
-                    // Pass the translation change handler
-                    onChangeHandler={(v) => handleTranslationsChange(fieldPath, v)}
-                    editingPath={editingPath}
-                    setEditingPath={setEditingPath}
-                  />
-                );
-              }
-              return null;
-            })
+      {/* Save Changes Area - Primarily for Site Config */}
+      <div className="md:col-span-2 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end items-center gap-4">
+        {saveStatus && (
+          <span className="text-sm text-gray-500 dark:text-gray-400 italic">{saveStatus}</span>
+        )}
+        <button
+          onClick={saveSiteConfig} // Save button now primarily saves the config settings
+          className="inline-flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          disabled={isSaveDisabled}
+        >
+          {isSaveDisabled && saveStatus.includes('Saving') ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Saving...
+            </>
           ) : (
-            <p className="text-gray-500 dark:text-gray-400 italic">Contact form fields not available.</p>
+            'Save Site Config' // Changed button text
           )}
-        </div>
+        </button>
       </div>
     </div>
   );

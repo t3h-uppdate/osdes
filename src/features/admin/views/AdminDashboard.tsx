@@ -45,6 +45,7 @@ const navItems = [
   { icon: <FileEdit size={20} />, label: 'Projects', tab: 'projects' },
   { icon: <Briefcase size={20} />, label: 'Services', tab: 'services' }, // Added Services section
   { icon: <ImageIcon size={20} />, label: 'Media', tab: 'media' }, // Use the alias ImageIcon
+  { icon: <ImageIcon size={20} />, label: 'Hero Images', tab: 'heroImages' }, // Added Hero Images section
   { icon: <Link2 size={20} />, label: 'Social Links', tab: 'socialLinks' },
   { icon: <Settings size={20} />, label: 'Settings', tab: 'generalInfo' },
 ];
@@ -89,17 +90,15 @@ const AdminDashboard: React.FC = () => {
 
   // Use the custom hook for data management
   const {
-    translations,
-    siteSettings, // Get the new site settings state
+    siteConfig,         // Use new site config state
+    translationsData,   // Use new translations state (key-value pairs)
     isLoading,
     saveStatus,
-    handleTranslationsChange, // Use renamed handler
-    handleSiteSettingChange, // Get the new handler
-    saveTranslations, // Use renamed save function
-    saveSiteSettings, // Get the new save function
-    handleDeleteItem,
-    // resetSiteSettingsToDefaults, // Get reset functions if needed later
-    // resetTranslationsToDefaults,
+    handleSiteConfigChange, // Use new handler for config
+    handleTranslationChange, // Use new handler for individual translations
+    saveSiteConfig,         // Use new save function for config
+    saveTranslation,        // Use new save function for individual translations
+    // resetSiteConfigToDefaults, // Get reset function if needed later
   } = useAdminData();
 
   // Local UI state
@@ -198,55 +197,22 @@ const AdminDashboard: React.FC = () => {
               <TabContentRenderer
                 activeTab={activeTab}
                 isLoading={isLoading}
-                // Pass both data sources and handlers
-                translations={translations}
-                siteSettings={siteSettings}
-                editingPath={editingPath}
-                setEditingPath={setEditingPath}
-                handleTranslationsChange={handleTranslationsChange}
-                handleSiteSettingChange={handleSiteSettingChange}
-                handleDeleteItem={handleDeleteItem}
-                // Pass other props as needed by TabContentRenderer's children
+                // Pass updated data sources and handlers
+                siteConfig={siteConfig}
+                translationsData={translationsData}
+                editingPath={editingPath} // Keep if used by other tabs
+                setEditingPath={setEditingPath} // Keep if used by other tabs
+                handleSiteConfigChange={handleSiteConfigChange}
+                handleTranslationChange={handleTranslationChange}
+                // Pass save-related props needed by specific tabs
+                saveStatus={saveStatus}
+                saveSiteConfig={saveSiteConfig} // Pass the config save function
+                saveTranslation={saveTranslation} // Pass the translation save function
+                // handleDeleteItem is removed
               />
             </div>
 
-            {/* Save Changes Area */}
-            {activeTab && !['dashboard', 'media', 'socialLinks', 'pages', 'projects', 'services'].includes(activeTab) && ( // Example: Only show for Settings/GeneralInfo? Adjust as needed
-              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end items-center gap-4">
-                {saveStatus && (
-                  <span className="text-sm text-gray-500 dark:text-gray-400 italic">{saveStatus}</span>
-                )}
-                <button
-                  // Decide which save function to call based on the active tab or combine logic if necessary
-                  onClick={async () => {
-                    // Example: Conditional saving based on tab
-                    if (activeTab === 'generalInfo') {
-                       await saveSiteSettings();
-                    } else {
-                       // Assuming other tabs might save translations? Adjust logic.
-                       await saveTranslations();
-                    }
-                    // Or potentially always save both if changes are tracked globally:
-                    // await saveSiteSettings();
-                    // await saveTranslations();
-                  }}
-                  className="inline-flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  disabled={isSaveDisabled}
-                >
-                  {isSaveDisabled && saveStatus.includes('Saving') ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </button>
-              </div>
-            )}
+            {/* Save Changes Area Removed */}
           </div>
         </main>
       </div>

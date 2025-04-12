@@ -98,7 +98,7 @@ export const useProjectManagement = () => {
             showToast("Supabase client not available.", 'error');
             return;
         }
-        setIsLoading(true);
+        // setIsLoading(true); // Remove loading state toggle for smoother onBlur updates
         try {
              // Ensure tags are handled correctly if updated
             const dataToUpdate = { ...updatedData };
@@ -130,19 +130,17 @@ export const useProjectManagement = () => {
             console.error("Error updating project:", err);
             showToast(`Error updating project: ${err.message}`, 'error');
         } finally {
-            setIsLoading(false);
+            // setIsLoading(false); // Remove loading state toggle
         }
     }, [showToast]);
 
-    // Delete a project
-    const deleteProject = useCallback(async (projectId: string) => {
+    // Delete a project - Modified to return Promise and remove internal confirmation/toast
+    const deleteProject = useCallback(async (projectId: string): Promise<void> => {
         if (!supabase) {
-            showToast("Supabase client not available.", 'error');
-            return;
+            // Throw error instead of showing toast here
+            throw new Error("Supabase client not available.");
         }
-        if (!window.confirm('Are you sure you want to delete this project?')) {
-            return;
-        }
+        // Confirmation should be handled by the component calling this function
 
         setIsLoading(true);
         try {
@@ -153,15 +151,101 @@ export const useProjectManagement = () => {
 
             if (dbError) throw dbError;
 
+            // Update state locally on success
             setProjects(prev => prev.filter(p => p.id !== projectId));
-            showToast('Project deleted successfully!', 'success');
+            // Resolve the promise on success
+            // Toast will be handled by the component
         } catch (err: any) {
             console.error("Error deleting project:", err);
-            showToast(`Error deleting project: ${err.message}`, 'error');
+            // Reject the promise on error
+            // Toast will be handled by the component
+            throw err; // Re-throw the error to be caught by the caller
         } finally {
             setIsLoading(false);
         }
+    }, []); // Removed showToast dependency
+
+    // Toggle publish status
+    const toggleProjectStatus = useCallback(async (projectId: string, currentStatus: boolean) => {
+        if (!supabase) {
+            showToast("Supabase client not available.", 'error');
+            return;
+        }
+        const newStatus = !currentStatus;
+        // Optimistically update UI first
+        setProjects(prev =>
+            prev.map(p => (p.id === projectId ? { ...p, is_published: newStatus } : p))
+        );
+        try {
+            const { error: dbError } = await supabase
+                .from(PROJECTS_TABLE)
+                .update({ is_published: newStatus })
+                .eq('id', projectId);
+
+            if (dbError) throw dbError;
+
+            showToast(`Project ${newStatus ? 'published' : 'set to draft'} successfully!`, 'success');
+        } catch (err: any) {
+            console.error("Error toggling project status:", err);
+            showToast(`Error toggling status: ${err.message}`, 'error');
+            // Revert optimistic update on error
+            setProjects(prev =>
+                prev.map(p => (p.id === projectId ? { ...p, is_published: currentStatus } : p))
+            );
+        }
+        // No loading state change needed for quick toggle
     }, [showToast]);
+
+    // Move project up or down
+    const moveProject = useCallback(async (index: number, direction: 'up' | 'down') => {
+        if (!supabase) {
+            showToast("Supabase client not available.", 'error');
+            return;
+        }
+        const swapIndex = direction === 'up' ? index - 1 : index + 1;
+        if (swapIndex < 0 || swapIndex >= projects.length) return; // Cannot move first item up or last item down
+
+        const projectToMove = projects[index];
+        const projectToSwapWith = projects[swapIndex];
+
+        // Ensure sort_order exists and is a number for both items
+        const orderToMove = projectToMove.sort_order ?? index;
+        const orderToSwapWith = projectToSwapWith.sort_order ?? swapIndex;
+
+        // Optimistically update UI
+        const optimisticProjects = [...projects];
+        optimisticProjects[index] = { ...projectToSwapWith, sort_order: orderToMove };
+        optimisticProjects[swapIndex] = { ...projectToMove, sort_order: orderToSwapWith };
+        setProjects(optimisticProjects.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)));
+
+
+        setIsLoading(true); // Show loading for reorder as it involves two updates
+        try {
+            // Perform updates sequentially to swap sort_order values
+            const { error: error1 } = await supabase
+                .from(PROJECTS_TABLE)
+                .update({ sort_order: orderToSwapWith }) // Give projectToMove the order of projectToSwapWith
+                .eq('id', projectToMove.id);
+            if (error1) throw error1;
+
+            const { error: error2 } = await supabase
+                .from(PROJECTS_TABLE)
+                .update({ sort_order: orderToMove }) // Give projectToSwapWith the original order of projectToMove
+                .eq('id', projectToSwapWith.id);
+            if (error2) throw error2;
+
+            showToast(`Project moved ${direction} successfully.`, 'success');
+            // Fetch again to ensure consistency, although optimistic update should be correct
+            // await fetchProjects(); // Optional: uncomment if optimistic update isn't reliable
+        } catch (err: any) {
+            console.error(`Error moving project ${direction}:`, err);
+            showToast(`Failed to reorder project: ${err.message}`, 'error');
+            // Revert optimistic update on error by fetching fresh data
+            await fetchProjects();
+        } finally {
+            setIsLoading(false);
+        }
+    }, [projects, showToast, fetchProjects]); // Added fetchProjects dependency
 
     return {
         projects,
@@ -171,5 +255,7 @@ export const useProjectManagement = () => {
         addProject,
         updateProject,
         deleteProject,
+        toggleProjectStatus, // Export new function
+        moveProject,         // Export new function
     };
 };

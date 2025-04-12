@@ -33,6 +33,7 @@ export const useFetchServices = () => {
             const { data, error: dbError } = await supabase
                 .from(SERVICES_TABLE)
                 .select('*')
+                .eq('is_published', true) // Only fetch published services
                 .order('sort_order', { ascending: true, nullsFirst: false }); // Order by sort_order, handle nulls
 
             if (dbError) throw dbError;
