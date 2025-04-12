@@ -1,5 +1,6 @@
 import React from 'react';
-import { Copy } from 'lucide-react';
+// Remove direct icon import
+import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
 import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface ColorPickerInputProps {
@@ -77,7 +78,7 @@ const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
           title="Copy color code"
           type="button" // Prevent form submission if wrapped in a form
         >
-          <Copy size={20} />
+          <IconRenderer iconName="Copy" size={20} />
         </button>
       </div>
       {description && (

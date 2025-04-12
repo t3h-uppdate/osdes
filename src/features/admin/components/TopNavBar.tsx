@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Menu, User, ChevronDown, LogOut } from 'lucide-react';
+// Remove direct icon imports
+import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
 import ThemeSwitcher from './ThemeSwitcher'; // Import the ThemeSwitcher
 
 interface TopNavBarProps {
@@ -29,7 +30,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden mr-4" // Show only on mobile
             aria-label="Toggle mobile sidebar"
           >
-            <Menu size={24} />
+            <IconRenderer iconName="Menu" size={24} />
           </button>
           {/* Desktop Sidebar Toggle */}
           <button
@@ -37,7 +38,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 hidden md:block" // Show only on desktop
             aria-label="Toggle desktop sidebar"
           >
-            <Menu size={24} />
+            <IconRenderer iconName="Menu" size={24} />
           </button>
           {/* Optional: Add Logo or Title here */}
           {/* <span className="text-xl font-semibold text-gray-800 dark:text-white ml-4">Admin Panel</span> */}
@@ -58,9 +59,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
               aria-haspopup="true"
               id="user-menu-button" // Added id for accessibility
             >
-              <User size={20} />
+              <IconRenderer iconName="User" size={20} />
               <span className="hidden sm:inline">Admin</span> {/* Hide text on very small screens */}
-              <ChevronDown size={16} className={`transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+              <IconRenderer iconName="ChevronDown" size={16} className={`transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
             </button>
             {/* Dropdown Menu */}
             {showUserMenu && (
@@ -80,7 +81,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
                   role="menuitem" // Added role
                   tabIndex={-1} // Added for accessibility
                 >
-                  <LogOut size={16} />
+                  <IconRenderer iconName="LogOut" size={16} />
                   <span>Logout</span>
                 </button>
               </div>

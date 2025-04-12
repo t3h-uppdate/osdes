@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Menu, X, Sun, Moon } from 'lucide-react';
+// Icons are now handled by IconRenderer
 // Import the correct types
 import { SiteConfigData } from '../../features/admin/hooks/useAdminData';
+import Logo from '../common/Logo'; // Import the Logo component
+import IconRenderer from '../common/IconRenderer'; // Import the central IconRenderer
 import { Page } from '../../features/admin/sections/Pages/types';
 // No need to import useSiteSettings here, props come from MainSite
 
@@ -71,12 +73,14 @@ const Navigation: React.FC<NavigationProps> = ({
                 <div className="flex justify-between h-16">
                     {/* Logo/Title Section */}
                     <div className="flex items-center">
-                        {/* Optionally use logo from siteConfig */}
-                        {siteConfig?.logo_url ? (
-                            <img src={siteConfig.logo_url} alt={t('site.title', 'Site Logo')} className="h-8 w-auto" />
-                        ) : (
-                            <Home className={`h-8 w-8 ${isDarkMode ? 'text-white' : 'text-blue-600'}`} />
-                        )}
+                        {/* Use the Logo component */}
+                        <Logo
+                            logoUrl={siteConfig?.logo_url}
+                            logoIconName={siteConfig?.logo_icon_name}
+                            altText={t('site.title', 'Site Logo')}
+                            // Adjust styling for navbar height
+                            className="h-8 w-auto !mb-0" // Override default margin-bottom and height
+                         />
                         <span className={`ml-2 text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{t('site.title', 'OS Design')}</span>
                     </div>
 
@@ -111,7 +115,7 @@ const Navigation: React.FC<NavigationProps> = ({
                             className={`p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDarkMode ? 'text-gray-300 hover:text-white focus:ring-offset-gray-800 focus:ring-white' : 'text-gray-700 hover:text-blue-600 focus:ring-offset-white focus:ring-blue-500'}`}
                             aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
                         >
-                            {isDarkMode ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+                            {isDarkMode ? <IconRenderer iconName="Sun" className="h-6 w-6" /> : <IconRenderer iconName="Moon" className="h-6 w-6" />}
                         </button>
 
                         {/* Mobile menu button */}
@@ -123,7 +127,7 @@ const Navigation: React.FC<NavigationProps> = ({
                                 aria-controls="mobile-menu"
                             >
                                 <span className="sr-only">Open main menu</span>
-                                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                                {isMenuOpen ? <IconRenderer iconName="X" className="h-6 w-6" /> : <IconRenderer iconName="Menu" className="h-6 w-6" />}
                             </button>
                         </div>
                     </div>

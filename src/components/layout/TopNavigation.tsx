@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaHome, FaProjectDiagram, FaBlog, FaUser, FaConciergeBell, FaEnvelope } from 'react-icons/fa'; // Import necessary icons
+// Remove direct icon imports
+import IconRenderer from '../common/IconRenderer'; // Import central renderer
 
 interface TopNavigationProps {
   // Props can be added here if needed later
@@ -17,14 +18,14 @@ const TopNavigation: React.FC<TopNavigationProps> = () => {
     }
   };
 
-  // Define link items with icons
+  // Define link items with icon names
   const navLinks = [
-    { href: '#home', text: 'Home', icon: <FaHome /> },
-    { href: '#projects', text: 'Featured Projects', icon: <FaProjectDiagram /> },
-    { href: '#blog', text: 'Blog', icon: <FaBlog /> },
-    { href: '#about', text: 'About Me', icon: <FaUser /> },
-    { href: '#services', text: 'Services', icon: <FaConciergeBell /> },
-    { href: '#contact', text: 'Contact Me', icon: <FaEnvelope /> },
+    { href: '#home', text: 'Home', iconName: 'FaHome' },
+    { href: '#projects', text: 'Featured Projects', iconName: 'FaProjectDiagram' },
+    { href: '#blog', text: 'Blog', iconName: 'FaBlog' },
+    { href: '#about', text: 'About Me', iconName: 'FaUser' }, // Uses FaUser key from IconRenderer
+    { href: '#services', text: 'Services', iconName: 'FaConciergeBell' },
+    { href: '#contact', text: 'Contact Me', iconName: 'FaEnvelope' },
   ];
 
   return (
@@ -38,7 +39,7 @@ const TopNavigation: React.FC<TopNavigationProps> = () => {
               href={link.href}
               onClick={(e) => handleSmoothScroll(e, link.href)} // Added onClick for smooth scroll
             >
-              <span className="mr-2">{link.icon}</span> {/* Display icon */}
+              <span className="mr-2"><IconRenderer iconName={link.iconName} /></span> {/* Use IconRenderer */}
               {link.text} {/* Display text */}
             </a>
           </li>
@@ -55,7 +56,7 @@ const TopNavigation: React.FC<TopNavigationProps> = () => {
               onClick={(e) => handleSmoothScroll(e, link.href)}
               aria-label={link.text} // Add aria-label for accessibility
             >
-              {link.icon}
+              <IconRenderer iconName={link.iconName} /> {/* Use IconRenderer */}
             </a>
           </li>
         ))}

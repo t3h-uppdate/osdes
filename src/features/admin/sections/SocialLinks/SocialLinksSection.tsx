@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import supabase from '../../../../config/supabaseConfig'; // Import Supabase client
-import { PlusCircle } from 'lucide-react';
+// Remove direct icon import
+import IconRenderer from '../../../../components/common/IconRenderer'; // Import IconRenderer
 import { useNotifications } from '../../../../contexts/NotificationContext';
 import { SocialLink } from './types'; // Corrected path (assuming type matches useSocialLinks)
 import SocialLinkForm from './components/SocialLinkForm'; // Corrected path
@@ -232,7 +233,7 @@ const SocialLinksSection: React.FC = () => {
           onClick={() => { setIsAdding(true); setEditingLinkId(null); setCurrentEditData(null); }}
           className="mb-6 flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
-          <PlusCircle size={18} /> Add New Link
+          <IconRenderer iconName="PlusCircle" size={18} /> Add New Link
         </button>
       )}
 

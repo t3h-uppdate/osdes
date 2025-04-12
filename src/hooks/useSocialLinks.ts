@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import supabase from '../config/supabaseConfig'; // Import Supabase client
-import { Github, Facebook, Mail, Instagram, Linkedin, Twitter } from 'lucide-react';
+// Icons are now handled by IconRenderer, remove direct imports here
 
 // Define the SocialLink interface (adjust if needed, mapping platform to name/icon)
 export interface SocialLink {
@@ -14,15 +14,7 @@ export interface SocialLink {
 // Define Supabase table name
 const SOCIAL_LINKS_TABLE = 'social_links';
 
-// Define the icon components map (moved from App.tsx)
-export const iconComponents: { [key: string]: React.ComponentType<{ size?: number | string }> } = {
-  Github,
-  Facebook,
-  Mail,
-  Instagram,
-  Linkedin,
-  Twitter,
-};
+// Remove the icon components map, it's handled by IconRenderer now
 
 export function useSocialLinks() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
@@ -73,5 +65,6 @@ export function useSocialLinks() {
     // No cleanup needed for getDocs, but good practice if using onSnapshot
   }, []); // Runs once on mount
 
-  return { socialLinks, iconComponents, isLoading, error };
+  // Return only the data, loading state, and error
+  return { socialLinks, isLoading, error };
 }

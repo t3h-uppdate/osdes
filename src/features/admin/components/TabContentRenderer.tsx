@@ -1,5 +1,6 @@
 import React from 'react';
-import { Eye, MessageSquare, FileText, Star } from 'lucide-react';
+// Remove direct icon imports
+import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
 
 // Import Tab Components
 import ProjectsSection from '../sections/Projects/ProjectsSection';
@@ -12,8 +13,6 @@ import HeroImageManagementSection from '../sections/HeroImageManagement/HeroImag
 
 // Import Utilities and Types (Adjust path as necessary)
 // Corrected utility and type imports
-import { renderFields, isValidTranslationKey } from '../sections/GeneralInfo/utils'; // Keep if renderFields is used elsewhere - MAY NEED REFACTORING
-import { getStaticSectionName } from '../utils/helpers';
 // Import new types from useAdminData
 import { SiteConfigData, TranslationsData } from '../hooks/useAdminData';
 import LoadingSpinner from '../../../components/common/LoadingSpinner'; // Import the spinner
@@ -42,12 +41,12 @@ interface TabContentRendererProps {
   // handleDeleteItem is removed
 }
 
-// Helper function to create styled stat cards
-const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; description: string; iconBgColor: string; iconTextColor: string }> =
-  ({ title, value, icon, description, iconBgColor, iconTextColor }) => (
+// Helper function to create styled stat cards - Updated type definition
+const StatCard: React.FC<{ title: string; value: string; iconName: string; description: string; iconBgColor: string; iconTextColor: string }> =
+  ({ title, value, iconName, description, iconBgColor, iconTextColor }) => ( // Use iconName
     <div className="bg-white dark:bg-gray-700 p-5 rounded-lg shadow border border-gray-200 dark:border-gray-600 flex items-center space-x-4">
       <div className={`p-3 rounded-full ${iconBgColor} ${iconTextColor}`}>
-        {icon}
+        <IconRenderer iconName={iconName} size={20} /> {/* Use IconRenderer */}
       </div>
       <div>
         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{title}</h3>
@@ -72,7 +71,7 @@ const renderDashboardContent = () => {
       <StatCard
         title="Page Views"
         value={stats.pageViews}
-        icon={<Eye size={20} />}
+        iconName="Eye" // Pass icon name
         description="Last 30 days"
         iconBgColor={iconColors.pageViews.bg}
         iconTextColor={iconColors.pageViews.text}
@@ -80,7 +79,7 @@ const renderDashboardContent = () => {
       <StatCard
         title="Total Pages"
         value={stats.totalPages}
-        icon={<FileText size={20} />}
+        iconName="FileText" // Pass icon name
         description="Published content"
         iconBgColor={iconColors.totalPages.bg}
         iconTextColor={iconColors.totalPages.text}
@@ -88,7 +87,7 @@ const renderDashboardContent = () => {
       <StatCard
         title="Comments"
         value={stats.comments}
-        icon={<MessageSquare size={20} />}
+        iconName="MessageSquare" // Pass icon name
         description="Awaiting response"
         iconBgColor={iconColors.comments.bg}
         iconTextColor={iconColors.comments.text}
@@ -96,7 +95,7 @@ const renderDashboardContent = () => {
       <StatCard
         title="Average Rating"
         value={stats.averageRating}
-        icon={<Star size={20} />}
+        iconName="Star" // Pass icon name
         description="Based on feedback"
         iconBgColor={iconColors.averageRating.bg}
         iconTextColor={iconColors.averageRating.text}
@@ -111,8 +110,6 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
   isLoading,
   siteConfig,         // Use new prop name
   translationsData,   // Use new prop name
-  editingPath,
-  setEditingPath,
   handleSiteConfigChange, // Use new prop name
   handleTranslationChange, // Use new prop name
   // Destructure new save-related props

@@ -12,6 +12,7 @@ const DEFAULT_LANGUAGE = 'en'; // Assuming 'en' is the primary language for admi
 export interface SiteConfigData {
   id?: number; // Should always be 1
   logo_url?: string | null;
+  logo_icon_name?: string | null; // New field for the icon name
   // Add other non-translatable config fields here if any (e.g., theme)
   updated_at?: string;
 }
@@ -20,6 +21,7 @@ export interface SiteConfigData {
 const defaultSiteConfig: SiteConfigData = {
   id: SITE_CONFIG_ID,
   logo_url: "",
+  logo_icon_name: null, // Default to null
 };
 
 // Define type for the translations data structure (key-value pairs)
@@ -131,7 +133,7 @@ export const useAdminData = () => {
   // --- Input Handlers ---
 
   // Handler for site config changes
-  const handleSiteConfigChange = useCallback((key: keyof Omit<SiteConfigData, 'id' | 'updated_at'>, value: string | null) => {
+  const handleSiteConfigChange = useCallback((key: keyof Omit<SiteConfigData, 'id' | 'updated_at'>, value: string | null | undefined) => { // Allow undefined for potential clearing
     setSiteConfig(prev => ({
       ...prev,
       [key]: value,

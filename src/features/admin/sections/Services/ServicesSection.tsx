@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Trash2, PlusSquare, ChevronDown, ChevronUp, Loader2, Eye, EyeOff, ArrowUp, ArrowDown, Server, Database, Code, Cloud, Terminal, Settings, Wrench, Shield, Network, Cpu, HardDrive, Smartphone, Monitor, Laptop, Keyboard, Mouse, Printer, Camera, Video, Mic, Mail, MessageSquare, Users, User, Briefcase, Book, FileText, Folder, Image, Link, Globe, MapPin, Navigation, Package, Truck, ShoppingCart, CreditCard, DollarSign, TrendingUp, BarChart, PieChart, Activity } from 'lucide-react'; // Added icons + common service icons
+// Remove direct icon imports
+import IconRenderer from '../../../../components/common/IconRenderer'; // Import central renderer
 import { useNotifications } from '../../../../contexts/NotificationContext';
 import { useServiceManagement } from './hooks/useServiceManagement';
 import { ServiceItem } from './types';
@@ -13,23 +14,11 @@ const commonServiceIcons = [
   'Cpu', 'HardDrive', 'Smartphone', 'Monitor', 'Laptop', 'Keyboard', 'Mouse', 'Printer', 'Camera',
   'Video', 'Mic', 'Mail', 'MessageSquare', 'Users', 'User', 'Briefcase', 'Book', 'FileText',
   'Folder', 'Image', 'Link', 'Globe', 'MapPin', 'Navigation', 'Package', 'Truck', 'ShoppingCart',
-  'CreditCard', 'DollarSign', 'TrendingUp', 'BarChart', 'PieChart', 'Activity'
+  'CreditCard', 'DollarSign', 'TrendingUp', 'BarChart', 'PieChart', 'Activity',
+  // Add other icon names from IconRenderer.tsx if desired for the dropdown
 ];
 
-// Helper to get Lucide component by name (case-insensitive)
-const LucideIconComponents: { [key: string]: React.ComponentType<any> } = {
-  Server, Database, Code, Cloud, Terminal, Settings, Wrench, Shield, Network, Cpu, HardDrive,
-  Smartphone, Monitor, Laptop, Keyboard, Mouse, Printer, Camera, Video, Mic, Mail, MessageSquare,
-  Users, User, Briefcase, Book, FileText, Folder, Image, Link, Globe, MapPin, Navigation, Package,
-  Truck, ShoppingCart, CreditCard, DollarSign, TrendingUp, BarChart, PieChart, Activity,
-  // Add other imported icons if needed for rendering previews, though not strictly necessary for the dropdown
-};
-
-const getIconComponent = (iconName: string | null | undefined): React.ComponentType<any> | null => {
-  if (!iconName) return null;
-  const upperCaseName = iconName.charAt(0).toUpperCase() + iconName.slice(1); // Ensure PascalCase
-  return LucideIconComponents[upperCaseName] || null; // Find component by name
-};
+// Remove LucideIconComponents map and getIconComponent function
 
 
 const ServicesSection: React.FC = () => {
@@ -157,7 +146,7 @@ const ServicesSection: React.FC = () => {
   if (isHookLoading && servicesFromHook.length === 0) {
     return (
       <div className="flex justify-center items-center p-6">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500 dark:text-gray-400" />
+        <IconRenderer iconName="Loader2" className="h-8 w-8 animate-spin text-gray-500 dark:text-gray-400" />
         <span className="ml-2 text-gray-600 dark:text-gray-400">Loading services...</span>
       </div>
     );
@@ -181,7 +170,7 @@ const ServicesSection: React.FC = () => {
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Add new service item"
         >
-          <PlusSquare size={16} /> Add New Service
+          <IconRenderer iconName="PlusSquare" size={16} /> Add New Service
         </button>
       </div>
 
@@ -214,27 +203,27 @@ const ServicesSection: React.FC = () => {
                        <button
                            onClick={(e) => { e.stopPropagation(); moveService(index, 'up'); }}
                            disabled={index === 0 || isHookLoading}
-                           className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                           aria-label="Move service up"
-                       >
-                           <ArrowUp size={16} />
-                       </button>
-                       <button
-                           onClick={(e) => { e.stopPropagation(); moveService(index, 'down'); }}
-                           disabled={index === servicesFromHook.length - 1 || isHookLoading}
-                           className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                           aria-label="Move service down"
-                       >
-                           <ArrowDown size={16} />
-                       </button>
+                            className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Move service up"
+                        >
+                            <IconRenderer iconName="ArrowUp" size={16} />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); moveService(index, 'down'); }}
+                            disabled={index === servicesFromHook.length - 1 || isHookLoading}
+                            className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Move service down"
+                        >
+                            <IconRenderer iconName="ArrowDown" size={16} />
+                        </button>
+                    </div>
+
+                   {/* Expand/Collapse Chevron */}
+                   <div className="mr-3 text-gray-500 dark:text-gray-400">
+                     {isExpanded ? <IconRenderer iconName="ChevronUp" size={18} /> : <IconRenderer iconName="ChevronDown" size={18} />}
                    </div>
 
-                  {/* Expand/Collapse Chevron */}
-                  <div className="mr-3 text-gray-500 dark:text-gray-400">
-                    {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </div>
-
-                  {/* Title Input in Header - Use local state */}
+                   {/* Title Input in Header - Use local state */}
                   <div className="flex-grow mr-2">
                     <label htmlFor={`service-title-${service.id}`} className="sr-only">
                       Service Title - {currentLocalData.title}
@@ -271,11 +260,11 @@ const ServicesSection: React.FC = () => {
                            : 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200 focus:ring-yellow-500'
                        }`}
                        aria-label={isPublished ? 'Set service to draft' : 'Publish service'}
-                       title={isPublished ? 'Published (Click to Draft)' : 'Draft (Click to Publish)'}
-                     >
-                       {isPublished ? <Eye size={18} /> : <EyeOff size={18} />}
-                     </button>
-                    {/* Delete Button */}
+                        title={isPublished ? 'Published (Click to Draft)' : 'Draft (Click to Publish)'}
+                      >
+                        {isPublished ? <IconRenderer iconName="Eye" size={18} /> : <IconRenderer iconName="EyeOff" size={18} />}
+                      </button>
+                     {/* Delete Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -283,11 +272,11 @@ const ServicesSection: React.FC = () => {
                       }}
                       disabled={isHookLoading}
                       className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 focus:outline-none focus:ring-1 focus:ring-red-500 dark:focus:ring-red-400 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label={`Delete service ${currentLocalData.title}`}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                       aria-label={`Delete service ${currentLocalData.title}`}
+                     >
+                       <IconRenderer iconName="Trash2" size={18} />
+                     </button>
+                   </div>
                 </div>
 
                 {/* Collapsible Content */}
@@ -330,14 +319,11 @@ const ServicesSection: React.FC = () => {
                             </option>
                           ))}
                         </select>
-                        {/* Optional: Display selected icon preview */}
-                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-500 rounded">
-                          {(() => {
-                            const IconComponent = getIconComponent(currentLocalData.icon);
-                            return IconComponent ? <IconComponent className="w-5 h-5 text-gray-600 dark:text-gray-300" /> : <span className="text-xs text-gray-400 dark:text-gray-300">?</span>;
-                          })()}
-                        </div>
-                      </div>
+                         {/* Display selected icon preview using IconRenderer */}
+                         <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-500 rounded">
+                           <IconRenderer iconName={currentLocalData.icon || ''} className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                         </div>
+                       </div>
                     </div>
                     {/* Sort Order Input */}
                     <div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Page } from '../types'; // Assuming Page type is in ../types
-import { Trash2, Edit, CheckCircle, EyeOff, ArrowUp, ArrowDown } from 'lucide-react'; // Re-added ArrowUp, ArrowDown
+// Remove direct icon imports
+import IconRenderer from '../../../../../components/common/IconRenderer'; // Import central renderer
 
 // --- Types ---
 interface PageListItemProps {
@@ -80,40 +81,40 @@ const PageListItem: React.FC<PageListItemProps> = ({
          <button
            onClick={() => page.id && onMoveUp(page.id)} // Pass page.id
            disabled={isLoading || index === 0 || !page.id} // Disable if no id
-           className={`p-1 rounded ${isLoading || index === 0 || !page.id ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
-           title="Move Up"
-         >
-           <ArrowUp size={18} />
-         </button>
-         {/* Move Down Button */}
+            className={`p-1 rounded ${isLoading || index === 0 || !page.id ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
+            title="Move Up"
+          >
+            <IconRenderer iconName="ArrowUp" size={18} />
+          </button>
+          {/* Move Down Button */}
+          <button
+            onClick={() => page.id && onMoveDown(page.id)} // Pass page.id
+            disabled={isLoading || index === pageCount - 1 || !page.id} // Disable if no id
+            className={`p-1 rounded ${isLoading || index === pageCount - 1 || !page.id ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
+            title="Move Down"
+          >
+            <IconRenderer iconName="ArrowDown" size={18} />
+          </button>
+         {/* Edit Button */}
          <button
-           onClick={() => page.id && onMoveDown(page.id)} // Pass page.id
-           disabled={isLoading || index === pageCount - 1 || !page.id} // Disable if no id
-           className={`p-1 rounded ${isLoading || index === pageCount - 1 || !page.id ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-600'}`}
-           title="Move Down"
-         >
-           <ArrowDown size={18} />
-         </button>
-        {/* Edit Button */}
-        <button
           onClick={() => onEdit(page)}
           disabled={isLoading}
-          className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-gray-600 disabled:opacity-50"
-          title="Edit"
-        >
-          <Edit size={18} />
-        </button>
-        {/* Delete Button */}
+           className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-gray-600 disabled:opacity-50"
+           title="Edit"
+         >
+           <IconRenderer iconName="Edit" size={18} />
+         </button>
+         {/* Delete Button */}
         {page.id && (
           <button
             onClick={() => onDelete(page.id!)}
             disabled={isLoading}
-            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-gray-600 disabled:opacity-50"
-            title="Delete"
-          >
-          <Trash2 size={18} />
-        </button>
-        )}
+             className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-gray-600 disabled:opacity-50"
+             title="Delete"
+           >
+           <IconRenderer iconName="Trash2" size={18} />
+         </button>
+         )}
         {/* Publish/Unpublish Button */}
         {page.id && (
           <button
@@ -123,12 +124,12 @@ const PageListItem: React.FC<PageListItemProps> = ({
               page.is_published
                 ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-gray-600' // Style for "Unpublish"
                 : 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-gray-600' // Style for "Publish"
-            } disabled:opacity-50`}
-            title={page.is_published ? 'Unpublish' : 'Publish'}
-          >
-            {page.is_published ? <EyeOff size={18} /> : <CheckCircle size={18} />}
-          </button>
-        )}
+             } disabled:opacity-50`}
+             title={page.is_published ? 'Unpublish' : 'Publish'}
+           >
+             {page.is_published ? <IconRenderer iconName="EyeOff" size={18} /> : <IconRenderer iconName="CheckCircle" size={18} />}
+           </button>
+         )}
       </div>
     </li>
   );

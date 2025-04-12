@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import emailjs from 'emailjs-com';
-import { Mail } from 'lucide-react';
+import IconRenderer from '../../../components/common/IconRenderer'; // Import IconRenderer
 import { useNotifications } from '../../../contexts/NotificationContext';
 
 // Update props to accept individual strings
@@ -150,7 +150,7 @@ function ContactSection({
                                 className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
                             >
                                 {submitButtonText} {/* Use prop */}
-                                <Mail className="ml-2 h-5 w-5" />
+                                <IconRenderer iconName="Mail" className="ml-2 h-5 w-5" />
                             </button>
                         </div>
                     </form>

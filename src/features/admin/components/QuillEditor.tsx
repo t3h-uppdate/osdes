@@ -1,7 +1,8 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
-import { Maximize2, Minimize2 } from 'lucide-react'; // Import icons for slider
+// Remove direct icon imports
+import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
 import supabase from '../../../config/supabaseConfig'; // Corrected path
 import { useNotifications } from '../../../contexts/NotificationContext'; // Corrected path
 
@@ -199,7 +200,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
       </div>
       {/* Height Adjustment Slider */}
       <div className="flex items-center space-x-2 mt-2 text-gray-600 dark:text-gray-400"> {/* Added dark mode text color */}
-        <Minimize2 size={16} />
+        <IconRenderer iconName="Minimize2" size={16} />
         <input
           type="range"
           min={MIN_HEIGHT}
@@ -209,7 +210,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
           aria-label="Adjust editor height"
         />
-        <Maximize2 size={16} />
+        <IconRenderer iconName="Maximize2" size={16} />
         <span className="text-xs w-12 text-right">{editorHeight}px</span> {/* Text color handled by parent div */}
       </div>
     </div>

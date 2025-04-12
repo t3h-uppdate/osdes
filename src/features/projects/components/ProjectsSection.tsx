@@ -1,5 +1,6 @@
 import React from 'react';
-import { ExternalLink, Code2, Github } from 'lucide-react'; // Added Github icon
+// Remove direct icon imports
+import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
 import { Project } from '../../admin/sections/Projects/types'; // Import the correct Project type
 
 interface ProjectsSectionProps {
@@ -39,7 +40,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
                         aria-label={`${project.title} Repository`}
                         className="text-gray-500 dark:text-gray-300 hover:text-blue-400 transition-colors"
                       >
-                        <Github size={20} />
+                        <IconRenderer iconName="Github" size={20} />
                       </a>
                     )}
                     {project.live_url && (
@@ -50,7 +51,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
                         aria-label={`${project.title} Live Demo`}
                         className="text-gray-500 dark:text-gray-300 hover:text-blue-400 transition-colors"
                       >
-                        <ExternalLink size={20} />
+                        <IconRenderer iconName="ExternalLink" size={20} />
                       </a>
                     )}
                   </div>

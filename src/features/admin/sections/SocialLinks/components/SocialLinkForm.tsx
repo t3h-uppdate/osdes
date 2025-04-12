@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, XCircle, HelpCircle } from 'lucide-react';
+// Remove direct icon imports and constants import
+import IconRenderer from '../../../../../components/common/IconRenderer'; // Import central renderer
 import { SocialLink } from '../types'; // Corrected path
-import { availableIcons, iconComponents } from '../constants/socialLinkConstants'; // Corrected path
+import { availableIcons } from '../constants/socialLinkConstants'; // Keep availableIcons for dropdown
 
 interface SocialLinkFormProps {
   initialData?: Omit<SocialLink, 'id'> | null; // Allow null for adding
@@ -43,7 +44,7 @@ const SocialLinkForm: React.FC<SocialLinkFormProps> = ({
     onSubmit(formData);
   };
 
-  const IconComp = iconComponents[formData.icon] || HelpCircle;
+  // IconComp is no longer needed, use IconRenderer directly
 
   return (
     // Apply dark mode styles to form container
@@ -95,8 +96,8 @@ const SocialLinkForm: React.FC<SocialLinkFormProps> = ({
                 <option key={iconName} value={iconName}>{iconName}</option>
               ))}
             </select>
-            {/* Icon Preview */}
-            <IconComp size={24} className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            {/* Icon Preview using IconRenderer */}
+            <IconRenderer iconName={formData.icon || 'HelpCircle'} size={24} className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
           </div>
         </div>
         {/* Order Input */}
@@ -116,12 +117,12 @@ const SocialLinkForm: React.FC<SocialLinkFormProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-3 mt-4">
-        {/* Apply dark mode styles to buttons */}
+        {/* Use IconRenderer for buttons */}
         <button type="submit" className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-700">
-          <Save size={18} /> {isEditing ? 'Save Changes' : 'Add Link'}
+          <IconRenderer iconName="Save" size={18} /> {isEditing ? 'Save Changes' : 'Add Link'}
         </button>
         <button type="button" onClick={onCancel} className="flex items-center gap-1.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-500 dark:hover:bg-gray-400 text-gray-700 dark:text-gray-100 font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-700">
-          <XCircle size={18} /> Cancel
+          <IconRenderer iconName="XCircle" size={18} /> Cancel
         </button>
       </div>
     </form>

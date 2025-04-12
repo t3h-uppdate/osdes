@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
 // Icons
-import { Info, Image as ImageIcon, User, Copyright, Phone, MessageSquare, Pencil } from 'lucide-react';
+import IconRenderer from '../../../../components/common/IconRenderer'; // Import central renderer
 // Import new types from useAdminData
 import { SiteConfigData, TranslationsData } from '../../hooks/useAdminData';
+
+// Define a list of icons suitable for logos
+const LOGO_ICON_OPTIONS = [
+  { name: "-- Select Icon --", value: "" }, // Option to clear selection
+  { name: "Home (Lucide)", value: "Home" },
+  { name: "React Logo (FA)", value: "FaReact" },
+  { name: "Code (FA)", value: "FaCode" },
+  { name: "Globe (FA)", value: "FaGlobe" },
+  { name: "Star (FA)", value: "FaStar" },
+  { name: "Bolt (FA)", value: "FaBolt" },
+  { name: "Vite Logo (SI)", value: "SiVite" },
+  { name: "Ionic Logo (IO5)", value: "IoLogoIonic" },
+  { name: "Design Services (MD)", value: "MdOutlineDesignServices" },
+  // Add more icons here as needed, ensure they are available in react-icons
+];
+
 
 // Define the props the component will accept based on the new hook structure
 interface GeneralInfoSectionProps {
@@ -27,7 +43,12 @@ const EditableField: React.FC<{
   setEditingIdentifier: (identifier: string | null) => void;
   isUrl?: boolean; // Optional flag for URL input type
   isTextarea?: boolean; // Optional flag for textarea
-}> = ({ label, identifier, value, onChange, onSave, isEditing, setEditingIdentifier, isUrl = false, isTextarea = false }) => {
+  isSelect?: boolean; // Flag for select dropdown
+  selectOptions?: { name: string; value: string }[]; // Options for select
+}> = ({
+  label, identifier, value, onChange, onSave, isEditing, setEditingIdentifier,
+  isUrl = false, isTextarea = false, isSelect = false, selectOptions = []
+}) => {
   const [isHovering, setIsHovering] = useState(false);
 
   const handleBlur = () => {
@@ -47,22 +68,43 @@ const EditableField: React.FC<{
     }
   };
 
+  // Find the display name for the current value if it's a select
+  const displayValue = isSelect
+    ? selectOptions?.find(opt => opt.value === value)?.name ?? value // Show name or value if not found
+    : value;
+
   return (
     <div key={identifier} className="mb-4">
       <label htmlFor={identifier} className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize mb-1">
         {label}
       </label>
       {isEditing ? (
-        isUrl ? (
+        isSelect ? (
+          <select
+            id={identifier}
+            name={identifier}
+            className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
+            value={value}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
+            onBlur={handleBlur} // Save on blur
+            autoFocus
+          >
+            {selectOptions?.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        ) : isUrl ? (
           <input
             type="url"
             id={identifier}
             name={identifier}
             className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
             value={value}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} // Added type
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
             onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
+            onKeyDown={handleKeyDown} // Keep keydown for URL/Text
             autoFocus
           />
         ) : isTextarea ? (
@@ -72,9 +114,9 @@ const EditableField: React.FC<{
             rows={value.length > 100 ? 5 : 3}
             className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
             value={value}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} // Added type
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
             onBlur={handleBlur}
-            onKeyDown={handleKeyDown} // Allow Escape, but not Enter save for textarea
+            onKeyDown={handleKeyDown}
             autoFocus
           />
         ) : (
@@ -84,7 +126,7 @@ const EditableField: React.FC<{
             name={identifier}
             className="block w-full flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow duration-150 ease-in-out"
             value={value}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} // Added type
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             autoFocus
@@ -97,9 +139,10 @@ const EditableField: React.FC<{
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
-          {value || <span className="text-gray-400 dark:text-gray-500 italic">Click to edit...</span>}
+          {/* Display the resolved name for select, or the value itself */}
+          {displayValue || <span className="text-gray-400 dark:text-gray-500 italic">Click to edit...</span>}
           {isHovering && (
-            <Pencil size={14} className="absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <IconRenderer iconName="Pencil" size={14} className="absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           )}
         </div>
       )}
@@ -132,6 +175,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
   const fieldsConfig = [
     // Site Config Fields
     { section: 'generalInfo', label: 'Logo Url', identifier: 'logo_url', type: 'config', isUrl: true },
+    { section: 'generalInfo', label: 'Logo Icon', identifier: 'logo_icon_name', type: 'config', isSelect: true, selectOptions: LOGO_ICON_OPTIONS }, // Use select for icon
     // Translation Fields (using dot notation keys)
     { section: 'generalInfo', label: 'Site Title', identifier: 'site.title', type: 'translation' },
     { section: 'generalInfo', label: 'Site Role', identifier: 'site.role', type: 'translation' },
@@ -164,10 +208,10 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
 
 
   // Function to render a section card
-  const renderSectionCard = (sectionKey: string, title: string, icon: React.ReactNode) => (
+  const renderSectionCard = (sectionKey: string, title: string, iconName: string) => ( // Pass iconName string
     <div key={sectionKey} className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border border-gray-200 dark:border-gray-600 space-y-4">
       <h3 className="text-lg font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4 flex items-center gap-2">
-        {icon}
+        <IconRenderer iconName={iconName} size={18} className="text-blue-500" /> {/* Use IconRenderer */}
         {title}
       </h3>
       {groupedFields[sectionKey]?.map(field => (
@@ -190,6 +234,8 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
           setEditingIdentifier={setEditingIdentifier}
           isUrl={field.isUrl}
           isTextarea={field.isTextarea}
+          isSelect={field.isSelect} // Pass select flag
+          selectOptions={field.selectOptions} // Pass options
         />
       ))}
     </div>
@@ -201,16 +247,16 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
 
       {/* Column 1 */}
       <div className="space-y-6">
-        {renderSectionCard('generalInfo', 'General Site Info', <Info size={18} className="text-blue-500" />)}
-        {renderSectionCard('hero', 'Hero Section', <ImageIcon size={18} className="text-purple-500" />)}
+        {renderSectionCard('generalInfo', 'General Site Info', 'Info')}
+        {renderSectionCard('hero', 'Hero Section', 'Image')}
       </div>
 
       {/* Column 2 */}
       <div className="space-y-6">
-        {renderSectionCard('about', 'About Section', <User size={18} className="text-green-500" />)}
-        {renderSectionCard('footer', 'Footer Section', <Copyright size={18} className="text-gray-500" />)}
-        {renderSectionCard('contactInfo', 'Contact Info', <Phone size={18} className="text-red-500" />)}
-        {renderSectionCard('contactForm', 'Contact Form Text', <MessageSquare size={16} className="text-yellow-500" />)}
+        {renderSectionCard('about', 'About Section', 'User')}
+        {renderSectionCard('footer', 'Footer Section', 'Copyright')}
+        {renderSectionCard('contactInfo', 'Contact Info', 'Phone')}
+        {renderSectionCard('contactForm', 'Contact Form Text', 'MessageSquare')}
       </div>
 
       {/* Save Changes Area - Primarily for Site Config */}

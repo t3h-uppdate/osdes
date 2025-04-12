@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNotifications } from '../../../../contexts/NotificationContext';
-import { Trash2, PlusSquare, ChevronDown, ChevronUp, Loader2, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react'; // Added icons
+// Remove direct icon imports
+import IconRenderer from '../../../../components/common/IconRenderer'; // Import central renderer
 import { useProjectManagement } from './hooks/useProjectManagement';
 import { Project } from './types';
 
@@ -147,7 +148,7 @@ const ProjectsSection: React.FC = () => {
   if (isHookLoading && projectsFromHook.length === 0) {
     return (
       <div className="flex justify-center items-center p-6">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500 dark:text-gray-400" />
+        <IconRenderer iconName="Loader2" className="h-8 w-8 animate-spin text-gray-500 dark:text-gray-400" />
         <span className="ml-2 text-gray-600 dark:text-gray-400">Loading projects...</span>
       </div>
     );
@@ -171,7 +172,7 @@ const ProjectsSection: React.FC = () => {
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Add new project item"
         >
-          <PlusSquare size={16} /> Add New Project
+          <IconRenderer iconName="PlusSquare" size={16} /> Add New Project
         </button>
       </div>
 
@@ -204,27 +205,27 @@ const ProjectsSection: React.FC = () => {
                        <button
                            onClick={(e) => { e.stopPropagation(); moveProject(index, 'up'); }}
                            disabled={index === 0 || isHookLoading}
-                           className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                           aria-label="Move project up"
-                       >
-                           <ArrowUp size={16} />
-                       </button>
-                       <button
-                           onClick={(e) => { e.stopPropagation(); moveProject(index, 'down'); }}
-                           disabled={index === projectsFromHook.length - 1 || isHookLoading}
-                           className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                           aria-label="Move project down"
-                       >
-                           <ArrowDown size={16} />
-                       </button>
+                            className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Move project up"
+                        >
+                            <IconRenderer iconName="ArrowUp" size={16} />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); moveProject(index, 'down'); }}
+                            disabled={index === projectsFromHook.length - 1 || isHookLoading}
+                            className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Move project down"
+                        >
+                            <IconRenderer iconName="ArrowDown" size={16} />
+                        </button>
+                    </div>
+
+                   {/* Expand/Collapse Chevron */}
+                   <div className="mr-3 text-gray-500 dark:text-gray-400">
+                     {isExpanded ? <IconRenderer iconName="ChevronUp" size={18} /> : <IconRenderer iconName="ChevronDown" size={18} />}
                    </div>
 
-                  {/* Expand/Collapse Chevron */}
-                  <div className="mr-3 text-gray-500 dark:text-gray-400">
-                    {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </div>
-
-                  {/* Title */}
+                   {/* Title */}
                   <div className="flex-grow mr-2 font-medium text-gray-700 dark:text-gray-200 truncate">
                     {currentLocalData.title || `Project: ${project.id}`}
                     {!isPublished && <span className="ml-2 text-xs font-normal text-yellow-600 dark:text-yellow-400">(Draft)</span>}
@@ -245,12 +246,12 @@ const ProjectsSection: React.FC = () => {
                            : 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200 focus:ring-yellow-500'
                        }`}
                        aria-label={isPublished ? 'Set project to draft' : 'Publish project'}
-                       title={isPublished ? 'Published (Click to Draft)' : 'Draft (Click to Publish)'}
-                     >
-                       {isPublished ? <Eye size={18} /> : <EyeOff size={18} />}
-                     </button>
+                        title={isPublished ? 'Published (Click to Draft)' : 'Draft (Click to Publish)'}
+                      >
+                        {isPublished ? <IconRenderer iconName="Eye" size={18} /> : <IconRenderer iconName="EyeOff" size={18} />}
+                      </button>
 
-                    {/* Delete Button */}
+                     {/* Delete Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -258,11 +259,11 @@ const ProjectsSection: React.FC = () => {
                       }}
                       disabled={isHookLoading}
                       className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 focus:outline-none focus:ring-1 focus:ring-red-500 dark:focus:ring-red-400 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label={`Delete project ${currentLocalData.title || project.id}`}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                       aria-label={`Delete project ${currentLocalData.title || project.id}`}
+                     >
+                       <IconRenderer iconName="Trash2" size={18} />
+                     </button>
+                   </div>
                 </div>
 
                 {/* Collapsible Content */}

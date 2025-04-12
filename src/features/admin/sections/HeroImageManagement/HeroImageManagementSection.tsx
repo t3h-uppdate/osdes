@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, GripVertical, Loader2 } from 'lucide-react';
+// Remove direct icon imports
+import IconRenderer from '../../../../components/common/IconRenderer'; // Import central renderer
 // TODO: Install react-beautiful-dnd and @types/react-beautiful-dnd
 import {
   DragDropContext,
@@ -153,22 +154,22 @@ const HeroImageManagementSection: React.FC = () => {
                       <div className="flex items-center space-x-3">
                         <button
                           {...providedDraggable.dragHandleProps}
-                          className="cursor-grab text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
-                          aria-label="Drag to reorder"
-                        >
-                          <GripVertical size={20} />
-                        </button>
-                        <img src={image.image_url} alt={`Hero ${index + 1}`} className="w-16 h-10 object-cover rounded" />
+                           className="cursor-grab text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
+                           aria-label="Drag to reorder"
+                         >
+                           <IconRenderer iconName="GripVertical" size={20} />
+                         </button>
+                         <img src={image.image_url} alt={`Hero ${index + 1}`} className="w-16 h-10 object-cover rounded" />
                         <span className="text-sm truncate max-w-xs text-gray-700 dark:text-gray-300">{image.image_url}</span>
                       </div>
                       <button
                         onClick={() => handleRemoveImage(image.id)}
-                        className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
-                        aria-label="Remove image"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                         className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
+                         aria-label="Remove image"
+                       >
+                         <IconRenderer iconName="Trash2" size={18} />
+                       </button>
+                     </div>
                   )}
                 </Draggable>
               ))}
@@ -180,12 +181,12 @@ const HeroImageManagementSection: React.FC = () => {
 
       <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
         <button
-          onClick={() => setIsImageSelectorOpen(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          <Plus size={18} className="-ml-1 mr-2" />
-          Add Image
-        </button>
+           onClick={() => setIsImageSelectorOpen(true)}
+           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+         >
+           <IconRenderer iconName="Plus" size={18} className="-ml-1 mr-2" />
+           Add Image
+         </button>
         {/* Corrected Save Button Area */}
         <div className="flex items-center space-x-4">
            {saveStatus && saveStatus !== 'Idle' && (
@@ -198,7 +199,7 @@ const HeroImageManagementSection: React.FC = () => {
            >
             {isSaving ? (
               <>
-                <Loader2 size={18} className="animate-spin -ml-1 mr-2" />
+                <IconRenderer iconName="Loader2" size={18} className="animate-spin -ml-1 mr-2" />
                 Saving...
               </>
             ) : (

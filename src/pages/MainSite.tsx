@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link
 import { motion } from 'framer-motion'; // Import motion
-import { Home, Mail, ArrowRight, Phone, MapPin } from 'lucide-react'; // Removed Menu, X, Moon, Sun
+// Icons are now handled by IconRenderer
 import { useNotifications } from '../contexts/NotificationContext';
-import { useSocialLinks, iconComponents } from '../hooks/useSocialLinks';
+import { useSocialLinks } from '../hooks/useSocialLinks'; // Remove iconComponents import
 // Remove useTranslations import, it's now part of useSite
 import Navigation from '../components/layout/Navigation';
+import Logo from '../components/common/Logo'; // Import the Logo component
+import IconRenderer from '../components/common/IconRenderer'; // Import the central IconRenderer
 import { useSite } from '../contexts/SiteSettingsContext'; // Import the renamed hook
 import ServicesSection from '../features/services/components/ServicesSection';
 import ContactSection from '../features/contact/components/ContactSection';
@@ -33,7 +35,7 @@ function MainSite() {
   const { siteConfig, t, theme, toggleTheme, isLoading, error } = useSite(); // Destructure needed values
 
   // Use other hooks as before
-  const { socialLinks, isLoading: isLoadingSocialLinks, error: socialLinksError } = useSocialLinks(); // Keep separate loading/error? Or combine? Let's keep separate for now.
+  const { socialLinks, isLoading: isLoadingSocialLinks, error: socialLinksError } = useSocialLinks(); // Destructure hook result
   const { projects, isLoading: isLoadingProjects, error: projectsError } = useFetchProjects();
   const { dynamicPages, loadingPages, errorPages } = useDynamicPages();
 
@@ -108,7 +110,7 @@ function MainSite() {
                   <div className="rounded-md shadow">
                     <a href="#contact" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 md:py-4 md:text-lg md:px-10">
                       {t('hero.ctaButtonText', 'Get Started')}
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <IconRenderer iconName="ArrowRight" className="ml-2 h-5 w-5" />
                     </a>
                   </div>
                 </div>
@@ -151,21 +153,19 @@ function MainSite() {
                     <h2 className="text-base font-semibold tracking-wide uppercase text-blue-600 dark:text-blue-400">{t('ui.links', 'Connect With Us')}</h2>
                   </div>
                   <div className="flex justify-center space-x-6">
-                    {socialLinks.map((link) => {
-                      const IconComponent = iconComponents[link.icon];
-                      return IconComponent ? (
-                        <a
-                          key={link.id}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={link.name}
-                          className="text-gray-700 dark:text-gray-300 hover:text-blue-400 transition-colors"
-                        >
-                          <IconComponent size={24} />
-                        </a>
-                      ) : null;
-                    })}
+                    {socialLinks.map((link) => (
+                      // Use IconRenderer directly with link.icon as the name
+                      <a
+                        key={link.id}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={link.name}
+                        className="text-gray-700 dark:text-gray-300 hover:text-blue-400 transition-colors"
+                      >
+                        <IconRenderer iconName={link.icon} size={24} />
+                      </a>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -190,12 +190,14 @@ function MainSite() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center">
-                {/* Optionally use logo from siteConfig if available */}
-                {siteConfig?.logo_url ? (
-                  <img src={siteConfig.logo_url} alt={t('site.title', 'Site Logo')} className="h-8 w-auto" />
-                ) : (
-                  <Home className="h-8 w-8 text-white" />
-                )}
+                {/* Use the Logo component */}
+                <Logo
+                  logoUrl={siteConfig?.logo_url}
+                  logoIconName={siteConfig?.logo_icon_name}
+                  altText={t('site.title', 'Site Logo')}
+                  // Adjust styling for footer
+                  className="h-8 w-auto !mb-0 text-white" // Override margin, set height, ensure icon color is white
+                />
                 <span className="ml-2 text-xl font-semibold text-white">{t('site.title', 'OS Design')}</span>
               </div>
               <p className="mt-4 text-gray-400">
@@ -219,13 +221,13 @@ function MainSite() {
               <ul className="space-y-2">
                 {t('contact.phone') && (
                   <li className="flex items-center text-gray-400">
-                    <Phone className="h-5 w-5 mr-2" />
+                    <IconRenderer iconName="Phone" className="h-5 w-5 mr-2" />
                     <span>{t('contact.phone')}</span>
                   </li>
                 )}
                 {t('contact.email') && (
                   <li className="flex items-center text-gray-400">
-                    <Mail className="h-5 w-5 mr-2" />
+                    <IconRenderer iconName="Mail" className="h-5 w-5 mr-2" />
                     <a href={`mailto:${t('contact.email')}`} className="hover:text-blue-400 transition-colors">
                       <span>{t('contact.email')}</span>
                     </a>
@@ -233,7 +235,7 @@ function MainSite() {
                 )}
                 {t('contact.address') && (
                   <li className="flex items-center text-gray-400">
-                    <MapPin className="h-5 w-5 mr-2" />
+                    <IconRenderer iconName="MapPin" className="h-5 w-5 mr-2" />
                     <span>{t('contact.address')}</span>
                   </li>
                 )}
