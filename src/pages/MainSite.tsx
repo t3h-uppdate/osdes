@@ -19,17 +19,16 @@ import { useDynamicPages } from '../hooks/useDynamicPages'; // Import the hook f
 import { pageVariants, pageTransition } from '../config/animations'; // Corrected import path
 import LoadingSpinner from '../components/common/LoadingSpinner'; // Import the spinner
 
-// Language type
-type Language = 'en' | 'sv' | 'ar';
+// Language type (Only 'en' is supported now)
+type Language = 'en';
 
 // Removed local animation variants and transition
-
 
 function MainSite() {
   useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Keep for mobile menu toggle
   // const [isDarkMode, setIsDarkMode] = useState(false); // Remove local dark mode state
-  const [language, setLanguage] = useState<Language>('en'); // Keep language state if needed for language switcher
+  // const [language, setLanguage] = useState<Language>('en'); // Removed language state
 
   // Use the consolidated site context hook
   const { siteConfig, t, theme, toggleTheme, isLoading, error } = useSite(); // Destructure needed values
@@ -44,12 +43,7 @@ function MainSite() {
   // Combine error states
   const combinedError = error || socialLinksError || projectsError || errorPages;
 
-
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // TODO: If language switching is implemented, need to pass the new language to useSite/useTranslations
-    setLanguage(e.target.value as Language);
-    console.warn("Language switching not fully implemented in useSite/useTranslations yet.");
-  };
+  // Removed handleLanguageChange as it's no longer needed
 
   // Loading indicator
   if (isDataLoading) {
@@ -75,15 +69,16 @@ function MainSite() {
       variants={pageVariants}
       transition={pageTransition}
       // Theme class is applied to <html> by the context provider
-      className={`min-h-screen ${language === 'ar' ? 'rtl' : ''} bg-white text-gray-900 dark:bg-gray-900 dark:text-white`}
+      // Removed rtl class logic as only 'en' is supported
+      className={`min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white`}
     >
       {/* Use the new Navigation component */}
       <Navigation
           // Pass theme and toggleTheme from useSite context
           theme={theme}
           toggleTheme={toggleTheme}
-          language={language}
-          handleLanguageChange={handleLanguageChange}
+          // language prop removed
+          // handleLanguageChange prop removed
           siteConfig={siteConfig} // Pass siteConfig
           t={t} // Pass the translation function
           dynamicPages={dynamicPages}
@@ -94,7 +89,7 @@ function MainSite() {
       {/* Hero Section */}
       <div id="home" className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 bg-white dark:bg-gray-900">
+          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">

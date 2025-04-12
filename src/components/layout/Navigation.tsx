@@ -10,13 +10,13 @@ import { Page } from '../../features/admin/sections/Pages/types';
 
 // Define the type for the translation function passed as a prop
 type TFunction = (key: string, defaultValue?: string) => string;
-type Language = 'en' | 'sv' | 'ar'; // Keep if language switcher is used
+type Language = 'en'; // Updated: Only English is available now
 
 interface NavigationProps {
     theme: 'light' | 'dark'; // Receive theme state
     toggleTheme: () => void; // Receive toggle function
-    language: Language;
-    handleLanguageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    // language prop removed
+    // handleLanguageChange prop removed
     siteConfig: SiteConfigData | null; // Use new SiteConfigData type, allow null
     t: TFunction; // Use the TFunction type
     dynamicPages: Page[];
@@ -27,8 +27,8 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({
     theme, // Destructure theme
     toggleTheme, // Destructure toggleTheme
-    language,
-    handleLanguageChange,
+    // language prop removed
+    // handleLanguageChange prop removed
     siteConfig, // Use siteConfig
     t, // Use t function
     dynamicPages,
@@ -98,16 +98,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
                     {/* Right side controls */}
                     <div className="flex items-center space-x-4">
-                        {/* Language Selector */}
-                        <select
-                            onChange={handleLanguageChange}
-                            value={language}
-                            className={`p-2 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-900 border-gray-300'}`}
-                        >
-                            <option value="en">English</option>
-                            <option value="sv">Svenska</option>
-                            <option value="ar">العربية</option>
-                        </select>
+                        {/* Language Selector Removed */}
 
                         {/* Dark Mode Toggle - Use toggleTheme from context */}
                         <button
