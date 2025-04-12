@@ -52,7 +52,7 @@ const ServicesSection: React.FC<ServicesSectionProps> = ({
 
   // Use dark: prefixes for styling
   return (
-    <div id="services" className="py-12 bg-gray-50 dark:bg-gray-800">
+    <section id="services" className="py-12 bg-gray-50 dark:bg-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="lg:text-center">
           {/* Use optional props for titles or hardcode defaults */}
@@ -90,7 +90,7 @@ const ServicesSection: React.FC<ServicesSectionProps> = ({
         } {/* Close the JSX expression block */}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
