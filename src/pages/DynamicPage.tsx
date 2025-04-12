@@ -20,7 +20,7 @@ const DynamicPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>(); // Get slug from URL params
   const location = useLocation();
   const { page, isLoading, error } = useDynamicPageData(slug); // Use the custom hook
-  const { t, isLoading: isLoadingTranslations, error: translationsError } = useTranslations('en'); // Keep translations for UI elements
+  const { t, error: translationsError } = useTranslations('en'); // Keep translations for UI elements
 
   // Log translation errors if any
   useEffect(() => {
@@ -94,10 +94,10 @@ const DynamicPage: React.FC = () => {
            {/* Display created_at and updated_at inside content box, aligned right - Added dark mode variants */}
           <div className="mt-8 text-sm text-gray-500 dark:text-gray-400 text-right border-t border-gray-700 dark:border-gray-600 pt-4">
             {page.created_at && (
-              <p>{t.ui?.page_created_at_label || 'Created:'} {format(new Date(page.created_at), 'yyyy-MM-dd HH:mm')}</p>
+              <p>{t('page_created_at_label') || 'Created:'} {format(new Date(page.created_at), 'yyyy-MM-dd HH:mm')}</p>
             )}
             {page.updated_at && page.updated_at !== page.created_at && ( // Only show updated if different from created
-              <p>{t.ui?.page_updated_at_label || 'Last Updated:'} {format(new Date(page.updated_at), 'yyyy-MM-dd HH:mm')}</p>
+              <p>{t('page_updated_at_label') || 'Last Updated:'} {format(new Date(page.updated_at), 'yyyy-MM-dd HH:mm')}</p>
             )}
           </div>
         </div>

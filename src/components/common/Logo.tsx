@@ -17,7 +17,7 @@ const Logo: React.FC<LogoProps> = ({
 }) => {
 
   // Base classes + custom classes passed via props
-  const baseClasses = `block mx-auto w-auto mb-6`;
+  const baseClasses = `block  w-auto mb-6`;
   const combinedIconClassName = `${baseClasses} ${className}`.trim();
   const combinedImageClassName = `${baseClasses} ${className}`.trim();
 
