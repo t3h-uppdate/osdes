@@ -9,9 +9,10 @@ interface BlogSectionProps {
 
 const BlogSection: React.FC<BlogSectionProps> = ({ dynamicPages }) => {
   return (
-    <section id='blog' className="container mx-auto px-4 py-16 shadow-xl backdrop-blur-sm">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-8 text-title">
+    <section id='blog' className="py-12 bg-gray-50 dark:bg-gray-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="lg:text-center mb-8">
+        <h2 className="text-base font-semibold tracking-wide uppercase text-blue-600 dark:text-blue-400">
         Blog
         </h2>
         {dynamicPages && dynamicPages.length > 0 && (
@@ -28,6 +29,7 @@ const BlogSection: React.FC<BlogSectionProps> = ({ dynamicPages }) => {
           </div>
         )}
       </div>
+   </div>
     </section>
   );
 };
