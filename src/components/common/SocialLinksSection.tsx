@@ -1,7 +1,7 @@
 import React from 'react';
 import IconRenderer from './IconRenderer'; // Adjust path if needed
 // Assuming type definition path - adjust if SocialLink type is defined elsewhere
-import { SocialLink } from '../../hooks/useSocialLinks';
+import { SocialLink } from '../../pages/hooks/useSocialLinks'; // Updated path
 // Use the simpler function type matching the context
 // import { TFunction } from 'i18next'; // Type for the translation function
 

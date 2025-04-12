@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'; // Import Link
 import { motion } from 'framer-motion'; // Import motion
 // Icons are now handled by IconRenderer
 import { useNotifications } from '../contexts/NotificationContext';
-import { useSocialLinks } from '../hooks/useSocialLinks'; // Remove iconComponents import
+import { useSocialLinks } from './hooks/useSocialLinks'; // Updated path
 // Remove useTranslations import, it's now part of useSite
 import Navigation from '../components/layout/Navigation';
 import Logo from '../components/common/Logo'; // Import the Logo component
@@ -13,9 +13,9 @@ import ServicesSection from '../features/services/components/ServicesSection';
 import ContactSection from '../features/contact/components/ContactSection';
 // HeroImage is now used within HeroSection
 import ProjectsSection from '../features/projects/components/ProjectsSection';
-import { useFetchProjects } from '../features/projects/hooks/useFetchProjects';
+// import { useFetchProjects } from '../features/projects/hooks/useFetchProjects'; // Removed import
 import BlogSection from '../features/blog/components/BlogSection'; // Import BlogSection
-import { useDynamicPages } from '../hooks/useDynamicPages'; // Import the hook for dynamic pages
+import { useDynamicPages } from './hooks/useDynamicPages'; // Updated path
 import { pageVariants, pageTransition } from '../config/animations'; // Corrected import path
 import LoadingSpinner from '../components/common/LoadingSpinner'; // Import the spinner
 import Footer from '../components/layout/Footer'; // Import the new Footer component
@@ -38,13 +38,13 @@ function MainSite() {
 
   // Use other hooks as before
   const { socialLinks, isLoading: isLoadingSocialLinks, error: socialLinksError } = useSocialLinks(); // Destructure hook result
-  const { projects, isLoading: isLoadingProjects, error: projectsError } = useFetchProjects();
+  // const { projects, isLoading: isLoadingProjects, error: projectsError } = useFetchProjects(); // Removed hook call
   const { dynamicPages, loadingPages, errorPages } = useDynamicPages();
 
   // Combine loading states (consider if all need to block rendering)
-  const isDataLoading = isLoading || isLoadingSocialLinks || isLoadingProjects || loadingPages;
+  const isDataLoading = isLoading || isLoadingSocialLinks || loadingPages; // Removed isLoadingProjects
   // Combine error states
-  const combinedError = error || socialLinksError || projectsError || errorPages;
+  const combinedError = error || socialLinksError || errorPages; // Removed projectsError
 
   // Removed handleLanguageChange as it's no longer needed
 
@@ -98,9 +98,9 @@ function MainSite() {
         sectionSubtitle={t('ui.everythingYouNeed', 'Everything you need for your project.')}
       />
 
-      {/* Projects Section */}
+      {/* Projects Section - Now fetches its own data */}
       <ProjectsSection
-        projects={projects}
+        // projects={projects} // Removed prop
         title={t('projects.title', 'Featured Projects')}
       />
 

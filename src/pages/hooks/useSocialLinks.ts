@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import supabase from '../config/supabaseConfig'; // Import Supabase client
+import supabase from '../../config/supabaseConfig'; // Import Supabase client
 // Icons are now handled by IconRenderer, remove direct imports here
 
 // Define the SocialLink interface (adjust if needed, mapping platform to name/icon)

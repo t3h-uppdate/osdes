@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import supabase from '../config/supabaseConfig'; // Import Supabase client
-import { Page } from '../features/admin/sections/Pages/types'; // Ensure the Page type is imported
+import supabase from '../../config/supabaseConfig'; // Import Supabase client
+import { Page } from '../../features/admin/sections/Pages/types'; // Ensure the Page type is imported
 
 // Define Supabase table name
 const PAGES_TABLE = 'pages';

@@ -1,15 +1,47 @@
 import React from 'react';
-// Remove direct icon imports
 import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
 import { Project } from '../../admin/sections/Projects/types'; // Import the correct Project type
+import { useFetchProjects } from '../hooks/useFetchProjects'; // Import the hook
+import LoadingSpinner from '../../../components/common/LoadingSpinner'; // Import spinner
 
 interface ProjectsSectionProps {
-  projects: Project[];
+  // projects: Project[]; // Removed projects prop
   title: string;
-  // isDarkMode?: boolean; // Removed prop
 }
 
-const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) => { // Removed isDarkMode from destructuring
+const ProjectsSection: React.FC<ProjectsSectionProps> = ({ title }) => {
+  const { projects, isLoading, error } = useFetchProjects(); // Fetch data internally
+
+  if (isLoading) {
+    return (
+      <section id='projects' className="py-16 bg-gray-50 dark:bg-gray-800 flex justify-center items-center min-h-[300px]">
+        <LoadingSpinner size={40} />
+      </section>
+    );
+  }
+
+  if (error) {
+    // Error is already a string or null from the hook
+    return (
+      <section id='projects' className="py-16 bg-gray-50 dark:bg-gray-800 flex justify-center items-center min-h-[300px]">
+        <p className="text-red-500">Error loading projects: {error}</p>
+      </section>
+    );
+  }
+
+  if (!projects || projects.length === 0) {
+    return (
+      <section id='projects' className="py-16 bg-gray-50 dark:bg-gray-800">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white">
+            {title}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">No projects to display currently.</p>
+        </div>
+      </section>
+    );
+  }
+
   // Use dark: prefixes for styling
   return (
     <section id='projects' className="py-16 bg-gray-50 dark:bg-gray-800">
