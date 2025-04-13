@@ -1,38 +1,42 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+// Removed DndProvider imports as we revert away from drag-and-drop for now
 import supabase from '../../../../config/supabaseConfig';
 import IconRenderer from '../../../../components/common/IconRenderer';
 import { useNotifications } from '../../../../contexts/NotificationContext';
 import { useTranslations } from '../../../../hooks/useTranslations';
 import { SocialLink } from './types';
-// Removed SocialLinkForm import
 import SocialLinkItem from './components/SocialLinkItem'; // Keep this
 import LoadingSpinner from '../../../../components/common/LoadingSpinner';
-import { availableIcons } from './constants/socialLinkConstants'; // Needed for default new link
+import { socialPlatforms, findPlatform, getDefaultPlatform } from './constants/socialLinkConstants';
 
-// Helper to check deep equality for objects (simplified)
-const deepEqual = (obj1: any, obj2: any): boolean => {
-  return JSON.stringify(obj1) === JSON.stringify(obj2);
-};
+// deepEqual helper removed
 
 const SocialLinksSection: React.FC = () => {
+  // Added requestConfirmation back
   const { showToast, requestConfirmation } = useNotifications();
   const currentLanguage = 'en';
   const { t, isLoading: isTranslationsLoading, error: translationsError } = useTranslations(currentLanguage);
 
   // State for links
   const [links, setLinks] = useState<SocialLink[]>([]);
-  const [initialLinks, setInitialLinks] = useState<SocialLink[]>([]); // Store initial state for comparison
   const [isLoadingLinks, setIsLoadingLinks] = useState(true);
-  const [isSavingLinks, setIsSavingLinks] = useState(false); // Loading state for batch save
-  const [isLinksDirty, setIsLinksDirty] = useState(false); // Track if links list has changed
+  // Removed batch save states (initialLinks, isSavingLinks, isLinksDirty)
 
   // State for title
   const [title, setTitle] = useState('');
-  const [initialTitle, setInitialTitle] = useState(''); // Store initial title
+  const [initialTitle, setInitialTitle] = useState('');
   const [isSavingTitle, setIsSavingTitle] = useState(false);
   const [isTitleDirty, setIsTitleDirty] = useState(false);
+
+  // State for adding a new link (form-like approach without a separate component)
+  const [isAdding, setIsAdding] = useState(false);
+  // Initialize with the default platform's data
+  const [newLinkData, setNewLinkData] = useState(() => {
+    const defaultPlatform = getDefaultPlatform();
+    return { name: defaultPlatform.name, url: defaultPlatform.baseUrl, icon: defaultPlatform.icon };
+  });
+  const [isSavingNewLink, setIsSavingNewLink] = useState(false);
+
 
   // Constants
   const SOCIAL_LINKS_TABLE = 'social_links';
@@ -54,26 +58,27 @@ const SocialLinksSection: React.FC = () => {
 
       if (error) throw error;
 
-      const fetchedLinks: SocialLink[] = data?.map((item, index): SocialLink => ({
-        id: String(item.id), // Keep ID from DB
-        name: item.platform || '', // Ensure defaults
-        url: item.url || '',
-        icon: item.platform || '', // Use platform as icon default if needed
-        order: Number(item.sort_order ?? index) // Use index as fallback order
-      })) || [];
+      // Map DB 'platform' column to 'name' and 'icon' in the state
+      const fetchedLinks: SocialLink[] = data?.map((item, index): SocialLink => {
+         const platformInfo = findPlatform(item.platform);
+         return {
+           id: String(item.id),
+           name: platformInfo?.name || item.platform || '', // Use platform name from constants if found
+           url: item.url || '',
+           icon: platformInfo?.icon || item.platform || 'HelpCircle', // Use platform icon from constants
+           order: Number(item.sort_order ?? index)
+         };
+      }) || [];
 
       setLinks(fetchedLinks);
-      setInitialLinks(JSON.parse(JSON.stringify(fetchedLinks))); // Deep copy for initial state
-      setIsLinksDirty(false); // Reset dirty state on fetch
     } catch (err: any) {
       console.error("Error fetching social links:", err);
       showToast("Failed to load social links.", 'error');
       setLinks([]);
-      setInitialLinks([]);
     } finally {
       setIsLoadingLinks(false);
     }
-  }, [showToast]);
+  }, [showToast]); // Dependency array updated
 
   // Fetch initial title
   useEffect(() => {
@@ -96,27 +101,6 @@ const SocialLinksSection: React.FC = () => {
     fetchLinks();
   }, [fetchLinks]);
 
-  // Check if links are dirty whenever links state changes
-  useEffect(() => {
-    // Compare current links with initial links (consider order)
-    if (links.length !== initialLinks.length) {
-      setIsLinksDirty(true);
-      return;
-    }
-    for (let i = 0; i < links.length; i++) {
-      // Compare relevant fields, ignore temporary IDs for new items
-      const current = { name: links[i].name, url: links[i].url, icon: links[i].icon, id: links[i].id };
-      const initial = { name: initialLinks[i].name, url: initialLinks[i].url, icon: initialLinks[i].icon, id: initialLinks[i].id };
-      if (!deepEqual(current, initial)) {
-        setIsLinksDirty(true);
-        return;
-      }
-    }
-    // If loop completes without finding differences
-    setIsLinksDirty(false);
-  }, [links, initialLinks]);
-
-
   // --- Title Handlers ---
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
@@ -132,7 +116,7 @@ const SocialLinksSection: React.FC = () => {
          .upsert({ key: TITLE_TRANSLATION_KEY, value: title, language: currentLanguage }, { onConflict: 'key, language' });
        if (error) throw error;
        showToast('Title updated successfully!', 'success');
-       setInitialTitle(title); // Update initial state on success
+       setInitialTitle(title);
        setIsTitleDirty(false);
      } catch (error: any) {
        console.error('Error updating title:', error);
@@ -142,239 +126,340 @@ const SocialLinksSection: React.FC = () => {
      }
    };
 
-  // --- Link List Handlers (Inline Editing) ---
-  const handleUpdateLink = (index: number, updatedData: Partial<SocialLink>) => {
-    setLinks(currentLinks => {
-      const newLinks = [...currentLinks];
-      newLinks[index] = { ...newLinks[index], ...updatedData };
-      return newLinks;
+  // --- Individual Link Handlers ---
+
+  // Handler for saving updates from SocialLinkItem
+  const handleUpdateLink = async (id: string, data: Omit<SocialLink, 'id' | 'order'>) => {
+    if (!supabase) {
+        showToast("Error: Supabase client not initialized.", 'error');
+        throw new Error("Supabase client not initialized"); // Throw to indicate failure to item
+    }
+    console.log(`Updating link ${id} with:`, data);
+    try {
+        // Save the platform *name* to the database 'platform' column
+        const { error } = await supabase
+            .from(SOCIAL_LINKS_TABLE)
+            .update({
+                platform: data.name, // Save the platform name
+                url: data.url,
+                // icon is derived from platform name, not stored directly
+            })
+            .eq('id', id);
+        if (error) throw error;
+        showToast('Link updated successfully!', 'success');
+        await fetchLinks(); // Refresh list after update
+    } catch (err: any) {
+        console.error("Error updating link:", err);
+        showToast("Failed to update link. Please try again.", 'error');
+        throw err; // Re-throw to indicate failure to item
+    }
+  };
+
+  // Handler for deleting a link (receives ID from SocialLinkItem)
+  const handleDeleteLink = (id: string) => {
+    const linkToDelete = links.find(l => l.id === id);
+    if (!linkToDelete) return;
+
+    requestConfirmation({
+      message: `Are you sure you want to delete the link "${linkToDelete.name}"?`,
+      onConfirm: async () => {
+        if (!supabase) {
+           showToast("Error: Supabase client not initialized.", 'error');
+           return;
+        }
+        try {
+          console.log("Attempting to delete link with ID:", id);
+          const { error } = await supabase
+            .from(SOCIAL_LINKS_TABLE)
+            .delete()
+            .eq('id', id);
+
+          if (error) {
+            console.error("Supabase delete error:", error);
+            throw error;
+          }
+
+          showToast('Link deleted successfully!', 'success');
+          await fetchLinks(); // Refresh list after delete
+        } catch (err: any) {
+          console.error("Error deleting link from Supabase:", err);
+          showToast(err.message || "Failed to delete link. Please try again.", 'error');
+        }
+      },
+      confirmText: 'Delete Link',
+      title: 'Confirm Deletion'
     });
-    // No need to set dirty here, useEffect handles it
   };
 
-  const handleDeleteLink = (index: number) => {
-    // No confirmation here, deletion happens on Save Changes
-    setLinks(currentLinks => currentLinks.filter((_, i) => i !== index));
-    // No need to set dirty here, useEffect handles it
-  };
-
-  const handleAddLink = () => {
-    const newLink: SocialLink = {
-      // Use a temporary ID for keys, it won't be saved to DB
-      id: `temp-${Date.now()}`,
-      name: '',
-      url: '',
-      icon: availableIcons[0] || '', // Default icon
-      order: links.length // Assign next order temporarily
-    };
-    setLinks(currentLinks => [...currentLinks, newLink]);
-    // No need to set dirty here, useEffect handles it
-  };
-
-  const handleMoveLink = useCallback((dragIndex: number, hoverIndex: number) => {
-    setLinks(currentLinks => {
-      const draggedLink = currentLinks[dragIndex];
-      const updatedLinks = [...currentLinks];
-      updatedLinks.splice(dragIndex, 1);
-      updatedLinks.splice(hoverIndex, 0, draggedLink);
-      // Reassign order based on new position
-      return updatedLinks.map((link, idx) => ({ ...link, order: idx }));
-    });
-    // No need to set dirty here, useEffect handles it
-  }, []);
-
-  // --- Batch Save Logic ---
-  const handleSaveChanges = async () => {
+  // --- Reordering Handler ---
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     if (!supabase) {
       showToast("Error: Supabase client not initialized.", 'error');
       return;
     }
-    setIsSavingLinks(true);
 
+    const linkToMove = links[index];
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (swapIndex < 0 || swapIndex >= links.length) {
+      console.warn("Cannot move item beyond list boundaries.");
+      return;
+    }
+
+    const linkToSwapWith = links[swapIndex];
+
+    // Optimistic UI update: Swap items locally first
+    const newLinks = [...links];
+    newLinks[index] = { ...linkToSwapWith, order: linkToMove.order }; // Assign original order of item being moved
+    newLinks[swapIndex] = { ...linkToMove, order: linkToSwapWith.order }; // Assign original order of item being swapped with
+    setLinks(newLinks); // Update state immediately
+
+    // Update database
     try {
-      const operations: Promise<any>[] = [];
+      // Update the item being moved to the target position's original order
+      const { error: error1 } = await supabase
+        .from(SOCIAL_LINKS_TABLE)
+        .update({ sort_order: linkToSwapWith.order }) // Use the original order of the item it's swapping with
+        .eq('id', linkToMove.id);
 
-      // 1. Determine Deletes
-      const initialIds = new Set(initialLinks.map(l => l.id).filter(id => id && !id.startsWith('temp-'))); // Ensure IDs exist and are not temp
-      const currentIds = new Set(links.map(l => l.id).filter(id => id && !id.startsWith('temp-'))); // Ignore temp IDs
-      const idsToDelete = [...initialIds].filter(id => !currentIds.has(id));
+      if (error1) throw error1;
 
+      // Update the item being swapped with to the moved item's original order
+      const { error: error2 } = await supabase
+        .from(SOCIAL_LINKS_TABLE)
+        .update({ sort_order: linkToMove.order }) // Use the original order of the item that was moved
+        .eq('id', linkToSwapWith.id);
 
-      if (idsToDelete.length > 0) {
-        console.log("Deleting IDs:", idsToDelete);
-        operations.push(
-          supabase.from(SOCIAL_LINKS_TABLE).delete().in('id', idsToDelete)
-        );
-      }
+      if (error2) throw error2;
 
-      // 2. Determine Updates and Inserts
-      const linksToUpsert = links
-        .map((link, index) => ({
-            id: link.id?.startsWith('temp-') ? undefined : link.id, // Remove temp IDs for insert
-            platform: link.name, // Map state 'name' back to DB 'platform'
-            url: link.url,
-            icon: link.icon, // Assuming icon name is stored directly or mapped from platform
-            sort_order: index, // Use current index as the definitive order
-        }))
-        .filter(link => {
-            // Only upsert if it's new or changed from initial state
-            if (!link.id) return true; // It's new
-            const initialLink = initialLinks.find(l => l.id === link.id);
-            if (!initialLink) return true; // Should not happen if ID exists, but safety check
-            // Compare relevant fields (platform, url, icon, sort_order)
-            return link.platform !== initialLink.name ||
-                   link.url !== initialLink.url ||
-                   link.icon !== initialLink.icon ||
-                   link.sort_order !== initialLink.order;
+      showToast('Link order updated successfully!', 'success');
+      // No need to fetch again, optimistic update is usually sufficient
+      // If strict consistency is needed, uncomment the fetch:
+      // await fetchLinks();
+    } catch (err: any) {
+      console.error("Error updating link order:", err);
+      showToast("Failed to update link order. Reverting changes.", 'error');
+      // Revert optimistic update on error
+      setLinks([...links]); // Restore original links array
+      // Or fetchLinks() to get the definite state from DB
+      await fetchLinks();
+    }
+   };
+
+   // --- Add New Link Handlers ---
+   const handleNewPlatformChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+     const selectedPlatformName = e.target.value;
+     const platform = findPlatform(selectedPlatformName);
+     if (platform) {
+       setNewLinkData({
+         name: platform.name,
+         icon: platform.icon,
+         url: platform.baseUrl === 'mailto:' ? platform.baseUrl : platform.baseUrl, // Set base URL
+       });
+     }
+   };
+
+   const handleNewUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     setNewLinkData(prev => ({ ...prev, url: e.target.value }));
+   };
+
+   const handleAddNewLink = async () => {
+    if (!supabase) {
+      showToast("Error: Supabase client not initialized.", 'error');
+      return;
+    }
+
+    // Validation based on selected platform
+    const platform = findPlatform(newLinkData.name);
+    if (!platform) {
+      showToast("Please select a valid platform.", 'error'); // Should ideally not happen if dropdown is used correctly
+      return;
+    }
+    if (!newLinkData.url) {
+       showToast("URL cannot be empty.", 'error');
+       return;
+    }
+    // Check if only the base URL was provided (unless it's mailto:)
+    if (newLinkData.url === platform.baseUrl && platform.baseUrl !== 'mailto:') {
+       showToast(`Please add your specific username/path/address after "${platform.baseUrl}"`, 'error');
+       return;
+    }
+
+    setIsSavingNewLink(true);
+    try {
+      // Determine the next sort order
+      const maxOrder = links.reduce((max, link) => Math.max(max, link.order), -1);
+      const newOrder = maxOrder + 1;
+
+      // Save the platform *name* to the database 'platform' column
+      const { error } = await supabase
+        .from(SOCIAL_LINKS_TABLE)
+        .insert({
+          platform: newLinkData.name, // Save platform name
+          url: newLinkData.url,
+          sort_order: newOrder,
+          created_at: new Date().toISOString() // Include created_at if needed by DB
         });
 
+      if (error) throw error;
 
-      if (linksToUpsert.length > 0) {
-         console.log("Upserting Links:", linksToUpsert);
-         operations.push(
-           supabase.from(SOCIAL_LINKS_TABLE).upsert(linksToUpsert, { onConflict: 'id' })
-         );
-      }
-
-      // Execute all operations if any exist
-      if (operations.length > 0) {
-          const results = await Promise.allSettled(operations);
-          console.log("Batch operation results:", results);
-
-          // Check for errors
-          const errors = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value?.error));
-          if (errors.length > 0) {
-            console.error("Error saving social links:", errors);
-            // Attempt to extract specific Supabase error messages
-            const errorMessages = errors.map(e => {
-                if (e.status === 'rejected') return e.reason?.message || 'Unknown rejection';
-                if (e.status === 'fulfilled' && e.value?.error) return e.value.error.message;
-                return 'Unknown error';
-            }).join('; ');
-            throw new Error(`Failed to save some links: ${errorMessages}`);
-          }
-          showToast('Social links saved successfully!', 'success');
-      } else {
-          // Changed 'info' to 'success' for showToast type compatibility
-          showToast('No changes to save.', 'success');
-      }
-
-
-      // Refresh data from DB regardless of save to get new IDs and confirm state
-      await fetchLinks(); // This resets initialLinks and dirty state
-
-    } catch (error: any) {
-      console.error('Error in handleSaveChanges:', error);
-      showToast(error.message || 'Failed to save social links. Please try again.', 'error');
+      showToast('Link added successfully!', 'success');
+      setIsAdding(false); // Close add form
+      // Reset form to default platform state
+      const defaultPlatform = getDefaultPlatform();
+      setNewLinkData({ name: defaultPlatform.name, url: defaultPlatform.baseUrl, icon: defaultPlatform.icon });
+      await fetchLinks(); // Refresh list
+    } catch (err: any) {
+      console.error("Error adding link to Supabase:", err);
+      showToast(err.message || "Failed to add link. Please try again.", 'error');
     } finally {
-      setIsSavingLinks(false);
+      setIsSavingNewLink(false);
     }
   };
 
+  const handleCancelAdd = () => {
+    setIsAdding(false);
+    // Reset form to default platform state
+    const defaultPlatform = getDefaultPlatform();
+    setNewLinkData({ name: defaultPlatform.name, url: defaultPlatform.baseUrl, icon: defaultPlatform.icon });
+  };
 
   // --- Render ---
-  const isLoading = isLoadingLinks || isTranslationsLoading;
-  // Combined save button disabled logic
-  const isSaveDisabled = isLoading || isSavingLinks || isSavingTitle || !isLinksDirty;
-
 
   return (
-    // Wrap with DndProvider
-    <DndProvider backend={HTML5Backend}>
-      <div className="p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-gray-800 dark:text-gray-200">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Manage Social Links</h2>
+    <div className="p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-gray-800 dark:text-gray-200">
+      <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Manage Social Links</h2>
 
-        {/* --- Title Section --- */}
-        <div className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700/50">
-          <label htmlFor="socialLinksTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Section Title
-          </label>
-          <div className="flex items-center gap-3">
-            <input
-              type="text"
-              id="socialLinksTitle"
-              value={title}
-              onChange={handleTitleChange}
-              disabled={isTranslationsLoading || isSavingTitle}
-              className="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50"
-              placeholder="e.g., Follow Us"
-            />
-            {/* Title Save Button - Separate from main save */}
-            <button
-              onClick={handleSaveTitle}
-              disabled={!isTitleDirty || isSavingTitle || isTranslationsLoading}
-              className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800"
-            >
-              {isSavingTitle ? <LoadingSpinner size={16} color="text-white" /> : 'Save Title'}
-            </button>
-          </div>
-          {isTranslationsLoading && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Loading title...</p>}
-        </div>
-
-        {/* --- Links List Section --- */}
-        <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white">Links</h3>
-        {isLoadingLinks && <p className="text-center text-gray-500 dark:text-gray-400 py-4">Loading links...</p>}
-
-        {!isLoadingLinks && (
-          <div className="mb-4">
-            {links.map((link, index) => (
-              <SocialLinkItem
-                key={link.id} // Use DB id or temp id as key
-                index={index}
-                link={link}
-                moveLink={handleMoveLink}
-                onUpdate={handleUpdateLink}
-                onDelete={handleDeleteLink}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Add New Link Button */}
-        {!isLoadingLinks && (
+      {/* --- Title Section --- */}
+      <div className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700/50">
+        <label htmlFor="socialLinksTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Section Title
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            id="socialLinksTitle"
+            value={title}
+            onChange={handleTitleChange}
+            disabled={isTranslationsLoading || isSavingTitle}
+            className="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50"
+            placeholder="e.g., Follow Us"
+          />
           <button
-            onClick={handleAddLink}
-            className="mb-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            onClick={handleSaveTitle}
+            disabled={!isTitleDirty || isSavingTitle || isTranslationsLoading}
+            className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800"
           >
-            <IconRenderer iconName="Plus" size={18} className="mr-1.5" /> Add New Link
+            {isSavingTitle ? <LoadingSpinner size={16} color="text-white" /> : 'Save Title'}
           </button>
-        )}
-
-        {/* Empty State */}
-        {!isLoadingLinks && links.length === 0 && (
-           <div className="text-center text-gray-500 dark:text-gray-400 mt-6 p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-             <p className="font-medium">No social links defined.</p>
-             <p className="text-sm mt-1">Click "Add New Link" above to create one.</p>
-           </div>
-         )}
-
-        {/* --- Save All Changes Area --- */}
-         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end items-center gap-4">
-            {/* Optional: Display dirty status */}
-            {isLinksDirty && !isSavingLinks && (
-                <span className="text-sm italic text-yellow-600 dark:text-yellow-400">Unsaved link changes</span>
-            )}
-           <button
-             onClick={handleSaveChanges}
-             className="inline-flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-             disabled={isSaveDisabled} // Use combined disabled logic
-           >
-             {isSavingLinks ? (
-               <>
-                 <LoadingSpinner size={20} color="text-white" className="-ml-1 mr-2" />
-                 Saving Links...
-               </>
-             ) : (
-                <>
-                 <IconRenderer iconName="Save" size={18} className="mr-1.5" />
-                 Save Link Changes
-                </>
-             )}
-           </button>
-         </div>
-
+        </div>
+        {isTranslationsLoading && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Loading title...</p>}
       </div>
-    </DndProvider>
+
+      {/* --- Links List Section --- */}
+      <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white">Links</h3>
+      {isLoadingLinks && <p className="text-center text-gray-500 dark:text-gray-400 py-4">Loading links...</p>}
+
+      {!isLoadingLinks && (
+        <div className="mb-4">
+          {links.map((link, index) => (
+            <SocialLinkItem
+               key={link.id}
+               index={index}
+               link={link}
+               totalItems={links.length} // Pass total items count
+               onSave={handleUpdateLink}
+               onDelete={handleDeleteLink}
+               onMove={handleMove} // Pass the move handler
+             />
+           ))}
+        </div>
+      )}
+
+      {/* --- Add New Link Section --- */}
+      {!isAdding && !isLoadingLinks && (
+        <button
+          onClick={() => setIsAdding(true)}
+          className="mb-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          <IconRenderer iconName="Plus" size={18} className="mr-1.5" /> Add New Link
+        </button>
+      )}
+
+      {isAdding && (
+        <div className="mb-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700/50">
+          <h4 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-100">Add New Link</h4>
+          <div className="flex items-center gap-3 mb-3">
+             {/* Platform Select Dropdown */}
+             <div className="flex items-center gap-1 flex-shrink-0 mr-2">
+               <IconRenderer iconName={newLinkData.icon || 'HelpCircle'} size={20} className="text-gray-500 dark:text-gray-400" />
+               <select
+                 name="name" // Value is the platform name
+                 value={newLinkData.name || ''}
+                 onChange={handleNewPlatformChange} // Use platform change handler
+                 className="p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                 aria-label="Select Platform"
+               >
+                 {/* <option value="" disabled>Select Platform</option> */} {/* Can be removed if state initializes */}
+                 {socialPlatforms.map(platform => (
+                   <option key={platform.name} value={platform.name} className="bg-white dark:bg-gray-700">
+                     {platform.name}
+                   </option>
+                 ))}
+               </select>
+             </div>
+
+             {/* URL Input */}
+             <input
+               type="text"
+               name="url"
+               placeholder={
+                 findPlatform(newLinkData.name)?.baseUrl
+                   ? `e.g., ${findPlatform(newLinkData.name)?.baseUrl}your-username`
+                   : "Full URL"
+               }
+               value={newLinkData.url || ''}
+               onChange={handleNewUrlChange} // Use URL change handler
+               className="flex-1 p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+             />
+          </div>
+          <div className="flex justify-end gap-3">
+             <button
+               onClick={handleCancelAdd}
+               type="button"
+               disabled={isSavingNewLink}
+               className="px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
+             >
+               Cancel
+             </button>
+             <button
+               onClick={handleAddNewLink}
+               type="button"
+               // Disable based on URL being empty or just the base URL (unless mailto:)
+               disabled={
+                 isSavingNewLink ||
+                 !newLinkData.url ||
+                 (newLinkData.url === findPlatform(newLinkData.name)?.baseUrl && newLinkData.url !== 'mailto:')
+               }
+               className="inline-flex items-center px-4 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+             >
+               {isSavingNewLink ? <LoadingSpinner size={18} className="mr-2" /> : <IconRenderer iconName="PlusCircle" size={18} className="mr-1.5" />}
+               {isSavingNewLink ? 'Adding...' : 'Add Link'}
+             </button>
+           </div>
+        </div>
+      )}
+
+
+      {/* Empty State */}
+      {!isLoadingLinks && links.length === 0 && !isAdding && (
+         <div className="text-center text-gray-500 dark:text-gray-400 mt-6 p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+           <p className="font-medium">No social links defined.</p>
+           <p className="text-sm mt-1">Click "Add New Link" above to create one.</p>
+         </div>
+       )}
+
+    </div>
   );
 };
 
