@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
-// Remove direct icon imports
+import { Code } from 'lucide-react'; // Import Code icon
 import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
 import supabase from '../../../config/supabaseConfig'; // Corrected path
 import { useNotifications } from '../../../contexts/NotificationContext'; // Corrected path
@@ -27,7 +27,45 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 }) => {
   const quillRef = useRef<ReactQuill>(null);
   const [editorHeight, setEditorHeight] = useState(DEFAULT_HEIGHT);
+  const [showHtmlSource, setShowHtmlSource] = useState(false); // State for HTML view
+  const [htmlContent, setHtmlContent] = useState(''); // State to store HTML content
   const { showToast } = useNotifications(); // Get toast function
+
+  // --- Toggle HTML View ---
+  const handleToggleHtmlView = () => {
+    const editor = quillRef.current?.getEditor();
+
+    if (!showHtmlSource) {
+      // Switching TO HTML view: get current HTML from editor
+      if (editor) {
+        setHtmlContent(editor.root.innerHTML);
+      }
+      setShowHtmlSource(true); // Toggle view state AFTER getting content
+    } else {
+      // Switching FROM HTML view:
+      if (editor) {
+        // 1. Parent state should already be updated by handleHtmlContentChange.
+        //    No need to call onChange(htmlContent) here anymore.
+
+        // 2. Directly update the Quill editor's root HTML to reflect textarea changes visually.
+        editor.root.innerHTML = htmlContent;
+
+        // 3. Set cursor to the end (optional, but good UX)
+        //    Need a slight delay for the DOM update to register before setting selection
+        setTimeout(() => editor.setSelection(editor.getLength(), 0), 0);
+      }
+      setShowHtmlSource(false); // Toggle view state AFTER updating content
+    }
+  };
+
+  // --- Handle changes in HTML textarea ---
+  const handleHtmlContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newHtml = event.target.value;
+    setHtmlContent(newHtml);
+    // Update parent component's state immediately as HTML is typed
+    onChange(newHtml);
+  };
+
 
   // --- Prevent page jump on picker click ---
   useEffect(() => {
@@ -186,32 +224,56 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         className="quill-editor-wrapper border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden" // Added dark mode border
         style={{ ...style, height: `${editorHeight}px`, display: 'flex', flexDirection: 'column' }} // Apply dynamic height, use flex column
       >
-        <ReactQuill
-          theme="snow"
-          value={value}
-          onChange={onChange}
-          ref={quillRef}
-          modules={modules}
-          formats={formats}
-          className="bg-white flex-grow" // Use flex-grow to fill height
-          placeholder={placeholder}
-          style={{ height: 'calc(100% - 42px)' }} // Adjust height calculation based on toolbar height (approx 42px)
-        />
+        {showHtmlSource ? (
+          <textarea
+            value={htmlContent}
+            onChange={handleHtmlContentChange} // Add onChange handler
+            className="w-full h-full p-2 border-0 focus:ring-0 focus:outline-none font-mono text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-300 flex-grow"
+            style={{ height: '100%' }} // Ensure textarea fills the wrapper
+            aria-label="Editable HTML Source Code"
+          />
+        ) : (
+          <ReactQuill
+            theme="snow"
+            value={value}
+            onChange={onChange}
+            ref={quillRef}
+            modules={modules}
+            formats={formats}
+            className="bg-white flex-grow" // Use flex-grow to fill height
+            placeholder={placeholder}
+            style={{ height: 'calc(100% - 42px)' }} // Adjust height calculation based on toolbar height (approx 42px)
+          />
+        )}
       </div>
-      {/* Height Adjustment Slider */}
-      <div className="flex items-center space-x-2 mt-2 text-gray-600 dark:text-gray-400"> {/* Added dark mode text color */}
-        <IconRenderer iconName="Minimize2" size={16} />
-        <input
-          type="range"
-          min={MIN_HEIGHT}
-          max={MAX_HEIGHT}
-          value={editorHeight}
-          onChange={(e) => setEditorHeight(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-          aria-label="Adjust editor height"
-        />
-        <IconRenderer iconName="Maximize2" size={16} />
-        <span className="text-xs w-12 text-right">{editorHeight}px</span> {/* Text color handled by parent div */}
+      {/* Controls: Height Adjustment Slider & HTML Toggle */}
+      <div className="flex items-center justify-between mt-2 text-gray-600 dark:text-gray-400">
+        {/* Height Slider */}
+        <div className="flex items-center space-x-2 flex-grow">
+          <IconRenderer iconName="Minimize2" size={16} />
+          <input
+            type="range"
+            min={MIN_HEIGHT}
+            max={MAX_HEIGHT}
+            value={editorHeight}
+            onChange={(e) => setEditorHeight(Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+            aria-label="Adjust editor height"
+            disabled={showHtmlSource} // Disable slider in HTML view
+          />
+          <IconRenderer iconName="Maximize2" size={16} />
+          <span className="text-xs w-12 text-right">{editorHeight}px</span>
+        </div>
+        {/* HTML Toggle Button */}
+        <button
+          type="button" // Add type="button" to prevent form submission
+          onClick={handleToggleHtmlView}
+          className="ml-4 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          title={showHtmlSource ? "Show Rich Text Editor" : "Show HTML Source"}
+          aria-label={showHtmlSource ? "Show Rich Text Editor" : "Show HTML Source"}
+        >
+          <Code size={18} />
+        </button>
       </div>
     </div>
   );

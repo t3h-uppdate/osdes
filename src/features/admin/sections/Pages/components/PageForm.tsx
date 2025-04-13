@@ -75,7 +75,7 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
           required
           placeholder="e.g., about-us, contact-page" // Added placeholder
           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          pattern="^[a-z0-9-]+$"
+          pattern="^[a-z0-9\\-]+$"
           title="Slug can only contain lowercase letters, numbers, and hyphens."
         />
       </div>
