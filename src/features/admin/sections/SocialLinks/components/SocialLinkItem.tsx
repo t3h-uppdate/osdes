@@ -1,96 +1,127 @@
-import React from 'react';
-import { SocialLink } from '../types'; // Corrected path
-// Remove iconComponents import and direct lucide imports
-import IconRenderer from '../../../../../components/common/IconRenderer'; // Import central renderer
+import React, { useRef } from 'react';
+import { useDrag, useDrop, DragSourceMonitor, DropTargetMonitor } from 'react-dnd';
+import IconRenderer from '../../../../../components/common/IconRenderer';
+import { SocialLink } from '../types';
+import { availableIcons } from '../constants/socialLinkConstants'; // Keep for dropdown
+
+// Define Item Type for react-dnd
+const ItemTypes = {
+  SOCIAL_LINK: 'social_link',
+};
 
 interface SocialLinkItemProps {
   link: SocialLink;
   index: number;
-  isFirst: boolean;
-  isLast: boolean;
-  onEdit: (link: SocialLink) => void;
-  onDelete: (id: string) => void;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
+  moveLink: (dragIndex: number, hoverIndex: number) => void;
+  onUpdate: (index: number, updatedLink: Partial<SocialLink>) => void; // Allow partial updates
+  onDelete: (index: number) => void;
 }
 
 const SocialLinkItem: React.FC<SocialLinkItemProps> = ({
   link,
   index,
-  isFirst,
-  isLast,
-  onEdit,
+  moveLink,
+  onUpdate,
   onDelete,
-  onMoveUp,
-  onMoveDown,
 }) => {
-  // Icon name is now directly link.icon, rendered by IconRenderer
+  const ref = useRef<HTMLDivElement>(null);
 
+  // --- Drag and Drop Logic (similar to LinkManagementSection) ---
+  const [, drop] = useDrop<{ index: number }, void, unknown>({
+    accept: ItemTypes.SOCIAL_LINK,
+    hover(item, monitor: DropTargetMonitor) {
+      if (!ref.current) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      if (dragIndex === hoverIndex) return;
+
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+      moveLink(dragIndex, hoverIndex);
+      item.index = hoverIndex; // Update item index as it moves
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemTypes.SOCIAL_LINK,
+    item: { index },
+    collect: (monitor: DragSourceMonitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  drag(drop(ref)); // Combine drag and drop refs
+
+  // --- Input Handlers ---
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    onUpdate(index, { [name]: value });
+  };
+
+  // --- Render ---
   return (
     <div
-      // Apply dark mode styles to container and borders
-      className="bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg shadow p-4 md:grid md:grid-cols-12 md:gap-4 md:items-center md:bg-transparent dark:md:bg-transparent md:hover:bg-gray-50 dark:md:hover:bg-gray-700 md:shadow-none md:rounded-none md:border-b md:border-gray-200 dark:md:border-gray-600 md:last:border-b-0 md:py-3 md:px-3 transition-colors duration-150"
+      ref={ref}
+      className={`flex items-center gap-3 p-3 border border-gray-300 dark:border-gray-600 rounded mb-2 bg-white dark:bg-gray-700 shadow-sm ${
+        isDragging ? 'opacity-50 cursor-grabbing' : 'cursor-grab'
+      }`}
+      style={{ opacity: isDragging ? 0.5 : 1 }} // Visual feedback for dragging
     >
-      {/* Mobile Card Layout */}
-      <div className="md:hidden space-y-3">
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Use IconRenderer */}
-            <IconRenderer iconName={link.icon} size={20} className="text-gray-500 dark:text-gray-400 flex-shrink-0" fallbackIcon="HelpCircle" />
-            <span className="font-semibold text-lg text-gray-800 dark:text-gray-100 truncate">{link.name}</span>
-          </div>
-          <span className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">(Order: {link.order})</span>
-        </div>
-        <div className="text-sm break-words">
-          <span className="font-medium text-gray-500 dark:text-gray-400">URL: </span>
-          <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">{link.url}</a>
-        </div>
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-600 mt-3">
-          {/* Action Buttons - Mobile - Use IconRenderer */}
-          <button onClick={() => onMoveUp(index)} disabled={isFirst} className={`p-1 rounded ${isFirst ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50' : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`} title="Move Up"><IconRenderer iconName="ArrowUp" size={18} /></button>
-          <button onClick={() => onMoveDown(index)} disabled={isLast} className={`p-1 rounded ${isLast ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50' : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`} title="Move Down"><IconRenderer iconName="ArrowDown" size={18} /></button>
-          <button onClick={() => onEdit(link)} className="text-yellow-500 dark:text-yellow-400 hover:text-yellow-400 dark:hover:text-yellow-300 hover:bg-gray-100 dark:hover:bg-gray-600 p-1 rounded" title="Edit"><IconRenderer iconName="Edit" size={18} /></button>
-          <button onClick={() => onDelete(link.id)} className="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 hover:bg-gray-100 dark:hover:bg-gray-600 p-1 rounded" title="Delete"><IconRenderer iconName="Trash2" size={18} /></button>
-        </div>
-      </div>
+      {/* Drag Handle */}
+      <IconRenderer iconName="GripVertical" size={18} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
 
-      {/* Desktop Table-like Layout */}
-      <div className="hidden md:contents"> {/* Use md:contents for grid layout */}
-        <div className="col-span-1 text-center text-gray-700 dark:text-gray-300">{link.order}</div>
-        <div className="col-span-1 flex items-center justify-center">
-          {/* Use IconRenderer */}
-          <IconRenderer iconName={link.icon} size={20} className="text-gray-500 dark:text-gray-400" fallbackIcon="HelpCircle" />
-        </div>
-        <div className="col-span-3 truncate pr-2 text-gray-800 dark:text-gray-100">{link.name}</div>
-        <div className="col-span-4 truncate pr-2">
-          <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">{link.url}</a>
-        </div>
-        <div className="col-span-3 flex items-center justify-end gap-1 pr-2"> {/* Added padding */}
-          {/* Action Buttons - Desktop - Apply dark mode styles */}
-          <button
-            onClick={() => onMoveUp(index)}
-            disabled={isFirst}
-            className={`p-1 rounded ${isFirst ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50' : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
-            title="Move Up"
-          >
-            <IconRenderer iconName="ArrowUp" size={18} />
-          </button>
-          <button
-            onClick={() => onMoveDown(index)}
-            disabled={isLast}
-            className={`p-1 rounded ${isLast ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50' : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
-            title="Move Down"
-          >
-            <IconRenderer iconName="ArrowDown" size={18} />
-          </button>
-          <button onClick={() => onEdit(link)} className="text-yellow-500 dark:text-yellow-400 hover:text-yellow-400 dark:hover:text-yellow-300 hover:bg-gray-100 dark:hover:bg-gray-600 p-1 rounded" title="Edit">
-            <IconRenderer iconName="Edit" size={18} />
-          </button>
-          <button onClick={() => onDelete(link.id)} className="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 hover:bg-gray-100 dark:hover:bg-gray-600 p-1 rounded" title="Delete">
-            <IconRenderer iconName="Trash2" size={18} />
-          </button>
-        </div>
-      </div>
+      {/* Platform/Name Input */}
+      <input
+        type="text"
+        name="name" // Corresponds to 'platform' in DB but 'name' in SocialLink type
+        placeholder="Platform Name"
+        value={link.name || ''}
+        onChange={handleInputChange}
+        className="flex-1 p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+      />
+
+      {/* Icon Select */}
+       <div className="flex items-center gap-1">
+         <select
+           name="icon"
+           value={link.icon || ''}
+           onChange={handleInputChange}
+           className="p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+           aria-label="Select Icon"
+         >
+           <option value="" disabled>Icon</option>
+           {availableIcons.map(iconName => (
+             <option key={iconName} value={iconName} className="bg-white dark:bg-gray-700">{iconName}</option>
+           ))}
+         </select>
+         <IconRenderer iconName={link.icon || 'HelpCircle'} size={20} className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
+       </div>
+
+
+      {/* URL Input */}
+      <input
+        type="text" // Changed to text to allow relative paths like '/about' if needed, though social links are usually absolute
+        name="url"
+        placeholder="Full URL"
+        value={link.url || ''}
+        onChange={handleInputChange}
+        className="flex-1 p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+      />
+
+      {/* Delete Button */}
+      <button
+        onClick={() => onDelete(index)}
+        className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+        aria-label="Delete social link"
+      >
+        <IconRenderer iconName="Trash2" size={18} />
+      </button>
     </div>
   );
 };
