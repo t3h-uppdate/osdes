@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Product, NewProduct, UpdateProduct } from '../../../../../types/productTypes'; // Adjust path as needed
+import { Product, NewProduct, UpdateProduct, ProductImage, ProductAvailabilityStatus } from '../../../../../types/productTypes'; // Adjust path, add ProductImage & ProductAvailabilityStatus
+import ExistingImageSelector from './ExistingImageSelector'; // Import the selector modal
+import IconRenderer from '../../../../../components/common/IconRenderer'; // For icons
 
 interface ProductFormProps {
   productToEdit?: Product | null; // Product data if editing, null/undefined if creating
@@ -14,70 +16,64 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onCancel,
   isLoading,
 }) => {
-  // Initialize form state based on whether we are editing or creating
-  const [formData, setFormData] = useState<Partial<Product>>(() => {
-    if (productToEdit) {
-      // If editing, populate form with existing product data
-      return { ...productToEdit };
-    } else {
-      // If creating, start with default/empty values
-      return {
-        name: '',
-        sku: '',
-        price: 0,
-        stock_quantity: 0,
-        availability_status: 'Out of Stock',
-        currency: 'USD',
-        // Add other fields with sensible defaults or empty states
-        short_description: '',
-        full_description: '',
-        category: '',
-        sale_price: undefined, // Optional numeric
-        discount_percentage: undefined, // Optional numeric
-        tags: [], // Array of strings
-        material: '',
-        video_url: '',
-        return_policy: '',
-        shipping_cost: undefined, // Optional numeric
-        estimated_delivery_time: '',
-        images: [], // Keep for future image handling
-        // ... other fields like variants, dimensions, weight, subscription
-      };
-    }
-  });
+  const [isImageSelectorOpen, setIsImageSelectorOpen] = useState<boolean>(false);
 
-  // Update form data if productToEdit changes (e.g., user selects a different product to edit)
-  useEffect(() => {
-    if (productToEdit) {
-      setFormData({ ...productToEdit });
-    } else {
-      // Reset form if switching from edit to create mode
-      setFormData({
-        name: '', sku: '', price: 0, stock_quantity: 0, availability_status: 'Out of Stock', currency: 'USD',
-        short_description: '', full_description: '', category: '', sale_price: undefined,
-        discount_percentage: undefined, tags: [], material: '', video_url: '', return_policy: '',
-        shipping_cost: undefined, estimated_delivery_time: '', images: [],
-      });
+  // Helper function to create the initial/reset state
+  const getInitialFormData = (product: Product | null | undefined): Partial<Product> => {
+    const initialData = product ? { ...product } : {
+      name: '',
+      sku: '',
+      price: 0,
+      stock_quantity: 0,
+      // Explicitly type the default status
+      availability_status: 'Out of Stock' as ProductAvailabilityStatus,
+      currency: 'USD',
+      short_description: '',
+      full_description: '',
+      category: '',
+      sale_price: undefined,
+      discount_percentage: undefined,
+      tags: [],
+      material: '',
+      video_url: '',
+      return_policy: '',
+      shipping_cost: undefined,
+      estimated_delivery_time: '',
+      images: [], // Initialize images as empty array
+    };
+    // Ensure images is always an array of ProductImage (or empty)
+    // The DB might store string[], but the form works with ProductImage[]
+    if (!Array.isArray(initialData.images) || (initialData.images.length > 0 && typeof initialData.images[0] === 'string')) {
+      // Attempt conversion if needed, or default to empty array if conversion isn't straightforward
+      // For now, we assume the form receives ProductImage[] or empty/null
+       initialData.images = []; // Default to empty ProductImage array if format is unexpected
     }
+    // Cast to ensure it's treated as ProductImage[] within the form state
+    initialData.images = initialData.images as ProductImage[];
+
+    return initialData;
+  };
+
+  // Initialize form state
+  const [formData, setFormData] = useState<Partial<Product>>(() => getInitialFormData(productToEdit));
+
+  // Update form data if productToEdit changes
+  useEffect(() => {
+    setFormData(getInitialFormData(productToEdit));
   }, [productToEdit]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value, type } = e.target;
-    // Handle checkbox type specifically if needed later
-    // const targetValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
-    const targetValue = value; // For now, assume text/select/textarea
-
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: targetValue,
+      [name]: value,
     }));
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Store undefined if empty, otherwise parse as float/int. Handle potential NaN.
     const parsedValue = parseFloat(value);
     const finalValue = value === '' ? undefined : (isNaN(parsedValue) ? undefined : parsedValue);
     setFormData((prev) => ({
@@ -86,40 +82,61 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }));
   };
 
+  // Handler for when images are selected in the modal
+  const handleImageSelection = (selectedImages: ProductImage[]) => {
+    setFormData(prev => ({
+      ...prev,
+      // Ensure we are setting ProductImage[]
+      images: selectedImages,
+    }));
+  };
+
+  // Handler to remove an image directly from the form preview
+  const handleRemoveImage = (indexToRemove: number) => {
+    setFormData(prev => {
+        // Ensure prev.images is treated as ProductImage[] or empty array
+        const currentImages = (Array.isArray(prev.images) ? prev.images : []) as ProductImage[];
+        return {
+            ...prev,
+            images: currentImages.filter((_, index) => index !== indexToRemove),
+        };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Basic validation example (expand as needed)
-    // Check only for undefined for numeric fields, as '' is no longer stored for them
     if (!formData.name || !formData.sku || formData.price === undefined || formData.stock_quantity === undefined) {
       alert('Please fill in all required fields (Name, SKU, Price, Stock Quantity).');
       return;
     }
 
-    // Prepare data for submission (remove empty strings for optional fields if necessary)
     const submissionData = { ...formData };
 
-    // Convert numeric fields back to numbers, handling undefined
-    // Ensure price is a number, defaulting to 0 if undefined
     submissionData.price = formData.price === undefined ? 0 : Number(formData.price);
-    // Ensure stock_quantity is a number, defaulting to 0 if undefined
     submissionData.stock_quantity = formData.stock_quantity === undefined ? 0 : Number(formData.stock_quantity);
-
-    // Add similar conversions for other OPTIONAL numeric fields
     submissionData.sale_price = formData.sale_price === undefined ? undefined : Number(formData.sale_price);
     submissionData.discount_percentage = formData.discount_percentage === undefined ? undefined : Number(formData.discount_percentage);
     submissionData.shipping_cost = formData.shipping_cost === undefined ? undefined : Number(formData.shipping_cost);
-    // Handle tags - assuming comma-separated input for now
+
     if (typeof submissionData.tags === 'string') {
-       submissionData.tags = (submissionData.tags as string).split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+      submissionData.tags = (submissionData.tags as string).split(',').map(tag => tag.trim()).filter(tag => tag !== '');
     } else if (!Array.isArray(submissionData.tags)) {
-        submissionData.tags = []; // Default to empty array if not string or array
+      submissionData.tags = [];
     }
 
+    // Ensure images is an array of ProductImage before submitting
+    if (!Array.isArray(submissionData.images)) {
+        submissionData.images = [];
+    }
+    // Ensure all elements are ProductImage (might be redundant but safe)
+    submissionData.images = (submissionData.images as any[]).filter(img => typeof img === 'object' && img !== null && 'url' in img) as ProductImage[];
 
-    // Type assertion needed here because formData is Partial<Product>, but we've ensured required numeric fields are numbers
+
     await onSubmit(submissionData as NewProduct | UpdateProduct);
   };
+
+  // Cast formData.images to ProductImage[] for reliable use in JSX
+  const currentFormImages = (Array.isArray(formData.images) ? formData.images : []) as ProductImage[];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
@@ -200,10 +217,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
             type="number"
             id="price"
             name="price"
-            value={formData.price ?? ''} // Use ?? '' to handle potential undefined/null and show empty string
+            value={formData.price ?? ''}
             onChange={handleNumberChange}
             required
-            step="0.01" // Allow decimals for price
+            step="0.01"
             min="0"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:text-white"
           />
@@ -249,7 +266,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             value={formData.stock_quantity ?? ''}
             onChange={handleNumberChange}
             required
-            step="1" // Whole numbers for stock
+            step="1"
             min="0"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:text-white"
           />
@@ -277,7 +294,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           type="text"
           id="tags"
           name="tags"
-          // Join array for display, handle potential non-array state defensively
           value={Array.isArray(formData.tags) ? formData.tags.join(', ') : (formData.tags || '')}
           onChange={handleChange}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:text-white"
@@ -347,8 +363,48 @@ const ProductForm: React.FC<ProductFormProps> = ({
       </div>
 
 
-      {/* Placeholder for more complex fields: Images, Variants, Dimensions, Weight, Subscription */}
-      <p className="text-center text-gray-500 dark:text-gray-400 text-sm pt-4">More complex fields (Images, Variants, Dimensions, etc.) will be added later.</p>
+      {/* Image Selection Area */}
+      <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Product Images</label>
+          {/* Display selected image previews */}
+          {(currentFormImages.length > 0) ? (
+             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 mb-3">
+               {currentFormImages.map((image, index) => (
+                 <div key={index} className="relative group aspect-square">
+                   <img
+                     src={image.url}
+                      alt={image.alt || `Product Image ${index + 1}`}
+                      className="w-full h-full object-cover rounded-md border dark:border-gray-600"
+                    />
+                    {/* Removed duplicate button from here */}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove image"
+                    >
+                      <IconRenderer iconName="CloseX" size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+          ) : (
+             <p className="text-sm text-gray-500 dark:text-gray-400">No images selected.</p>
+          )}
+          {/* Button to open the selector modal */}
+          <button
+            type="button"
+            onClick={() => setIsImageSelectorOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <IconRenderer iconName="Image" size={16} className="mr-2" />
+            Select Images from History
+          </button>
+      </div>
+
+
+      {/* Placeholder for other complex fields: Variants, Dimensions, Weight, Subscription */}
+      <p className="text-center text-gray-500 dark:text-gray-400 text-sm pt-4">More complex fields (Variants, Dimensions, etc.) will be added later.</p>
 
       {/* Action Buttons */}
       <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600">
@@ -368,6 +424,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
           {isLoading ? 'Saving...' : (productToEdit ? 'Update Product' : 'Add Product')}
         </button>
       </div>
+
+      {/* Image Selector Modal */}
+      {isImageSelectorOpen && (
+        <ExistingImageSelector
+          onSelectImages={handleImageSelection}
+          onClose={() => setIsImageSelectorOpen(false)}
+          // Pass currently selected images
+          currentSelectedImages={currentFormImages}
+        />
+      )}
     </form>
   );
 };

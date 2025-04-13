@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import supabase from '../../../../../config/supabaseConfig'; // Use default import
 import { Product, NewProduct, UpdateProduct } from '../../../../../types/productTypes'; // Adjust path as needed
+import { generateSlug } from '../../../utils/helpers'; // Import the slug generator
 
 const useProductManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -44,10 +45,15 @@ const useProductManagement = () => {
       setLoading(false);
       return null;
     }
+    // Generate slug before inserting
+    const slug = generateSlug(newProductData.name);
+    // TODO: Add logic here to check if slug exists and append number if needed
+    const productWithSlug = { ...newProductData, slug };
+
     try {
       const { data, error: insertError } = await supabase
         .from('products')
-        .insert([newProductData])
+        .insert([productWithSlug]) // Insert data with the generated slug
         .select()
         .single(); // Assuming insert returns the created row
 
@@ -75,10 +81,18 @@ const useProductManagement = () => {
       setLoading(false);
       return null;
     }
+    // Generate slug if name is being updated
+    let productWithSlug = { ...updatedProductData };
+    if (updatedProductData.name) {
+        const slug = generateSlug(updatedProductData.name);
+        // TODO: Add logic here to check if slug exists (and belongs to a different product) and append number if needed
+        productWithSlug = { ...productWithSlug, slug };
+    }
+
     try {
       const { data, error: updateError } = await supabase
         .from('products')
-        .update(updatedProductData)
+        .update(productWithSlug) // Update data with potentially new slug
         .eq('id', updatedProductData.id)
         .select()
         .single();

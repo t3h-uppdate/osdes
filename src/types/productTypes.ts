@@ -54,6 +54,7 @@ export interface Product {
   weight?: number;
   weight_unit?: 'kg' | 'lb' | string; // Common weight units or custom
   material?: string;
+  slug?: string; // Add the optional slug field
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
 }

@@ -51,3 +51,17 @@ export const getStaticSectionName = (key: string): string => {
     .replace(/([A-Z])/g, ' $1') // Add space before capital letters
     .replace(/^./, (str) => str.toUpperCase()); // Capitalize the first letter
 };
+
+// Helper function to generate a URL-friendly slug from a string
+export const generateSlug = (text: string): string => {
+  if (!text) return '';
+
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w-]+/g, '')        // Remove all non-word chars except -
+    .replace(/--+/g, '-')           // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start of text
+    .replace(/-+$/, '');            // Trim - from end of text
+};

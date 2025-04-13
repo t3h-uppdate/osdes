@@ -6,6 +6,7 @@ import AdminDashboard from './features/admin/views/AdminDashboard'; // Import th
 import LoginPage from './features/admin/views/LoginPage';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import DynamicPage from './pages/DynamicPage'; // Import the DynamicPage component
+import ProductDetailPage from './pages/ProductDetailPage'; // Import the Product Detail Page component
 import NotFoundPage from './pages/NotFoundPage';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { SiteProvider } from './contexts/SiteSettingsContext'; // Import the renamed provider
@@ -25,11 +26,13 @@ function AnimatedRoutes() {
             <ProtectedRoute>
               <AdminDashboard />
             </ProtectedRoute>
-          }
-        />
-        <Route path="/:slug" element={<DynamicPage />} /> {/* Route for dynamic pages */}
-        <Route path="*" element={<NotFoundPage />} /> {/* Catch-all 404 route */}
-      </Routes>
+           }
+         />
+         {/* Use category and slug for product details */}
+         <Route path="/product/:category/:productSlug" element={<ProductDetailPage />} />
+         <Route path="/:slug" element={<DynamicPage />} /> {/* Route for dynamic pages - Keep this AFTER specific routes */}
+         <Route path="*" element={<NotFoundPage />} /> {/* Catch-all 404 route */}
+       </Routes>
     </AnimatePresence>
   );
 }
