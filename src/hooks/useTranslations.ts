@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import supabase from '../config/supabaseConfig'; // Import Supabase client
 // Default translations might still be useful for fallback or initial structure
 // import { translations as defaultTranslations } from '../config/translations';

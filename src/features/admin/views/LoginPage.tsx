@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
     });
   }, []);
 
-  const particlesLoaded = useCallback(async (container: any) => {
+  const particlesLoaded = useCallback(async () => {
     // console.log('Particles loaded', container); // Optional: log when particles are loaded
   }, []);
 

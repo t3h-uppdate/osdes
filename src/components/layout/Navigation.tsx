@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 // Icons are now handled by IconRenderer
 // Import the correct types
 import { SiteConfigData } from '../../features/admin/hooks/useAdminData';
@@ -10,7 +9,6 @@ import { Page } from '../../features/admin/sections/Pages/types';
 
 // Define the type for the translation function passed as a prop
 type TFunction = (key: string, defaultValue?: string) => string;
-type Language = 'en'; // Updated: Only English is available now
 
 interface NavigationProps {
     theme: 'light' | 'dark'; // Receive theme state
@@ -31,7 +29,6 @@ const Navigation: React.FC<NavigationProps> = ({
     // handleLanguageChange prop removed
     siteConfig, // Use siteConfig
     t, // Use t function
-    dynamicPages,
     isMenuOpen,
     setIsMenuOpen,
 }) => {

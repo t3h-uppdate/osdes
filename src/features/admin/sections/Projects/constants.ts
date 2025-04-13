@@ -5,5 +5,5 @@ export const newProjectTemplate: Project = {
   title: "New Project Title",
   description: "New project description.",
   tags: ["Tag1", "Tag2"],
-  link: ""
+  live_url: "" // Changed 'link' to 'live_url' to match the Project type
 };

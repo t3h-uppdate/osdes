@@ -23,8 +23,7 @@ const HeroImageManagementSection: React.FC = () => {
     isLoading: isLoadingData, // Rename to avoid conflict with save loading state
     error: fetchError,
     saveStatus,
-    saveHeroImages,
-    fetchHeroImages, // Get fetch function if needed for refresh
+    saveHeroImages, // Get fetch function if needed for refresh
   } = useHeroImageManagement();
 
   // Local state to manage the list for drag-and-drop and edits before saving

@@ -133,7 +133,6 @@ const AdminDashboard: React.FC = () => {
   // Their logic is now handled by TabContentRenderer
 
   // Calculate button disabled state
-  const isSaveDisabled = isLoading || saveStatus.includes('Saving');
 
   return (
     <motion.div

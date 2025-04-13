@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link
+import { useState } from 'react';
 import { motion } from 'framer-motion'; // Import motion
 // Icons are now handled by IconRenderer
 import { useNotifications } from '../contexts/NotificationContext';
 import { useSocialLinks } from './hooks/useSocialLinks'; // Updated path
 // Remove useTranslations import, it's now part of useSite
 import Navigation from '../components/layout/Navigation';
-import Logo from '../components/common/Logo'; // Import the Logo component
-import IconRenderer from '../components/common/IconRenderer'; // Import the central IconRenderer
 import { useSite } from '../contexts/SiteSettingsContext'; // Import the renamed hook
 import ServicesSection from '../features/services/components/ServicesSection';
 import ContactSection from '../features/contact/components/ContactSection';
@@ -22,8 +19,6 @@ import Footer from '../components/layout/Footer'; // Import the new Footer compo
 import HeroSection from '../features/hero/components/HeroSection'; // Import the new HeroSection component
 import SocialLinksSection from '../components/common/SocialLinksSection'; // Import the new SocialLinksSection component
 
-// Language type (Only 'en' is supported now)
-type Language = 'en';
 
 // Removed local animation variants and transition
 

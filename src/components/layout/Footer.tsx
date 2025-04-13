@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../common/Logo'; // Adjust path as needed
 import IconRenderer from '../common/IconRenderer'; // Adjust path as needed

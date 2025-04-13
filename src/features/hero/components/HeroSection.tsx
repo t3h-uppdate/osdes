@@ -1,4 +1,3 @@
-import React from 'react';
 import IconRenderer from '../../../components/common/IconRenderer'; // Adjust path
 import HeroImage from './HeroImage'; // Sibling component
 import { useSite } from '../../../contexts/SiteSettingsContext'; // Adjust path

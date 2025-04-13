@@ -1,6 +1,5 @@
 import React from 'react';
 import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
-import { Project } from '../../admin/sections/Projects/types'; // Import the correct Project type
 import { useFetchProjects } from '../hooks/useFetchProjects'; // Import the hook
 import LoadingSpinner from '../../../components/common/LoadingSpinner'; // Import spinner
 

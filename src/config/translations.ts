@@ -1,4 +1,3 @@
-const currentYear = new Date().getFullYear(); // Keep this for dynamic year
 
 export const translations = {
   // English section from the existing src/config/translations.ts

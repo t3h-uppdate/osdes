@@ -1,4 +1,3 @@
-import React from 'react';
 import IconRenderer from './IconRenderer'; // Adjust path if needed
 // Assuming type definition path - adjust if SocialLink type is defined elsewhere
 import { SocialLink } from '../../pages/hooks/useSocialLinks'; // Updated path
