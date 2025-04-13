@@ -100,7 +100,11 @@ function MainSite() {
       />
 
       {/* Blog Section */}
-      <BlogSection dynamicPages={dynamicPages} />
+      {/* Pass blogTitle from siteConfig, provide a fallback */}
+      <BlogSection
+        dynamicPages={dynamicPages}
+        blogTitle={siteConfig?.blogTitle || t('blog.title', 'Blog')} // Use siteConfig or fallback translation
+      />
 
       {/* About Section */}
       <section id="about" className="py-12 bg-gray-50 dark:bg-gray-800">
@@ -121,7 +125,7 @@ function MainSite() {
       <ContactSection
         // Pass the t function for internal translations if needed, or specific keys
         contactTitle={t('contact.title', 'Contact Us')}
-        contactDescription={t('ui.contactDescription', 'Get in touch with us.')}
+        contactDescription={t('contact.description', 'Get in touch with us.')} // Updated key
         nameLabel={t('contact.form.nameLabel', 'Name')}
         emailLabel={t('contact.form.emailLabel', 'Email')}
         messageLabel={t('contact.form.messageLabel', 'Message')}

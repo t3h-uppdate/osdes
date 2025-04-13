@@ -16,6 +16,7 @@ export interface SiteConfigData {
   nav_links?: { text: string; url: string }[] | null; // Added for navigation links
   footer_links?: { text: string; url: string }[] | null; // Added for footer links
   footer_links_title?: string | null; // New field for the footer links title
+  blogTitle?: string | null; // Add the blog title field
   // Add other non-translatable config fields here if any (e.g., theme)
   updated_at?: string;
 }
@@ -28,6 +29,7 @@ const defaultSiteConfig: SiteConfigData = {
   nav_links: [], // Default to empty array
   footer_links: [], // Default to empty array
   footer_links_title: 'Quick Links', // Default title
+  blogTitle: 'Our Blog', // Default blog title
 };
 
 // Define type for the translations data structure (key-value pairs)

@@ -188,16 +188,22 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
     { section: 'hero', label: 'Hero Title 2', identifier: 'hero.title2', type: 'translation' },
     { section: 'hero', label: 'Hero Subtitle', identifier: 'hero.subtitle', type: 'translation', isTextarea: true },
     { section: 'hero', label: 'Hero Button Text', identifier: 'hero.ctaButtonText', type: 'translation' },
+    // About Section Fields
+    { section: 'about', label: 'About Title', identifier: 'about.title', type: 'translation' }, // Added About Title
     { section: 'about', label: 'About Description', identifier: 'about.description', type: 'translation', isTextarea: true },
     { section: 'footerText', label: 'Footer Copyright', identifier: 'footer.copyright', type: 'translation' },
     { section: 'contactInfo', label: 'Contact Phone', identifier: 'contact.phone', type: 'translation' },
     { section: 'contactInfo', label: 'Contact Address', identifier: 'contact.address', type: 'translation' },
     { section: 'contactInfo', label: 'Contact Email', identifier: 'contact.email', type: 'translation' },
     // Contact Form Fields
+    { section: 'contactForm', label: 'Contact Title', identifier: 'contact.title', type: 'translation' },
+    { section: 'contactForm', label: 'Contact Description', identifier: 'contact.description', type: 'translation', isTextarea: true },
     { section: 'contactForm', label: 'Name Label', identifier: 'contact.form.nameLabel', type: 'translation' },
     { section: 'contactForm', label: 'Email Label', identifier: 'contact.form.emailLabel', type: 'translation' },
     { section: 'contactForm', label: 'Message Label', identifier: 'contact.form.messageLabel', type: 'translation' },
     { section: 'contactForm', label: 'Submit Button', identifier: 'contact.form.submitButton', type: 'translation' },
+    // Add new contact form fields
+
   ];
 
   // Group fields by section for rendering
