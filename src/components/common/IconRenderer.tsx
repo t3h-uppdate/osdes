@@ -10,7 +10,9 @@ import {
   Keyboard, Mouse, Printer, Camera, Video, Mic, Users, Briefcase, Book, FileText,
   Folder, Link, Globe, Navigation as NavigationIcon, Package, Truck, ShoppingCart, CreditCard, DollarSign,
   TrendingUp, BarChart, PieChart, Activity, Menu, LogOut, Maximize2, Minimize2, Copy,
-  Star, AlertTriangle, Tag, ExternalLink, Code2, X, Sun, Moon, Home, CheckCircle
+  Star, AlertTriangle, Tag, ExternalLink, Code2, X, Sun, Moon, Home, CheckCircle, Navigation,
+  // Icons added from AdminDashboard
+  LayoutDashboard, FileEdit, Link2
   // Note: Renamed 'Navigation' to 'NavigationIcon' to avoid conflict with the component name
 } from 'lucide-react';
 
@@ -32,7 +34,9 @@ const IconMap: Record<string, React.ComponentType<any>> = {
   Keyboard, Mouse, Printer, Camera, Video, Mic, Users, Briefcase, Book, FileText,
   Folder, Link, Globe, NavigationIcon, Package, Truck, ShoppingCart, CreditCard, DollarSign,
   TrendingUp, BarChart, PieChart, Activity, Menu, LogOut, Maximize2, Minimize2, Copy,
-  Star, AlertTriangle, Tag, ExternalLink, Code2, X, Sun, Moon, Home, CheckCircle,
+  Star, AlertTriangle, Tag, ExternalLink, Code2, X, Sun, Moon, Home, Navigation, CheckCircle,
+  // Icons added from AdminDashboard
+  LayoutDashboard, FileEdit, Link2,
   // Font Awesome (using original names as keys for consistency)
   FaHome, FaProjectDiagram, FaBlog, FaUser: FaUserIcon, FaConciergeBell, FaEnvelope,
 };

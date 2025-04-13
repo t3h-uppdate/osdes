@@ -81,16 +81,26 @@ const Navigation: React.FC<NavigationProps> = ({
                         <span className={`ml-2 text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{t('site.title', 'OS Design')}</span>
                     </div>
 
-                    {/* Desktop Navigation Links - Use t function */}
+                    {/* Desktop Navigation Links - Dynamic */}
                     <div className="hidden md:flex items-center space-x-8">
-                        <a href="#home" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.home', 'Home')}</a>
-                        <a href="#services" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('services.title', 'Services')}</a>
-                        <a href="#projects" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('projects.title', 'Projects')}</a>
-                        <a href="#blog" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.blog', 'Blog')}</a>
-                        <a href="#about" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('about.title', 'About')}</a>
-                        <a href="#contact" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('contact.title', 'Contact')}</a>
-                        {/* Add dynamic pages if needed */}
-                        {/* {dynamicPages.map(page => ...)} */}
+                        {siteConfig?.nav_links && siteConfig.nav_links.length > 0 ? (
+                            siteConfig.nav_links.map((link, index) => (
+                                <a
+                                    key={index}
+                                    href={link.url}
+                                    className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                                >
+                                    {link.text}
+                                </a>
+                            ))
+                        ) : (
+                            // Fallback or default links if none are configured
+                            <>
+                                <a href="#home" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.home', 'Home')}</a>
+                                <a href="#contact" className={`hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('contact.title', 'Contact')}</a>
+                            </>
+                        )}
+                        {/* Consider adding dynamic pages here as well if needed */}
                     </div>
 
                     {/* Right side controls */}
@@ -122,18 +132,29 @@ const Navigation: React.FC<NavigationProps> = ({
                 </div>
             </div>
 
-            {/* Mobile Navigation Menu - Use t function */}
+            {/* Mobile Navigation Menu - Dynamic */}
             {isMenuOpen && (
                 <div className="md:hidden" id="mobile-menu">
                     <div className={`px-2 pt-2 pb-3 space-y-1 sm:px-3 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                        <a href="#home" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.home', 'Home')}</a>
-                        <a href="#services" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('services.title', 'Services')}</a>
-                        <a href="#projects" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('projects.title', 'Projects')}</a>
-                        <a href="#blog" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.blog', 'Blog')}</a>
-                        <a href="#about" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('about.title', 'About')}</a>
-                        <a href="#contact" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('contact.title', 'Contact')}</a>
-                        {/* Add dynamic pages if needed */}
-                        {/* {dynamicPages.map(page => ...)} */}
+                        {siteConfig?.nav_links && siteConfig.nav_links.length > 0 ? (
+                            siteConfig.nav_links.map((link, index) => (
+                                <a
+                                    key={index}
+                                    href={link.url}
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                                >
+                                    {link.text}
+                                </a>
+                            ))
+                        ) : (
+                            // Fallback or default links if none are configured
+                            <>
+                                <a href="#home" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('ui.home', 'Home')}</a>
+                                <a href="#contact" onClick={() => setIsMenuOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('contact.title', 'Contact')}</a>
+                            </>
+                        )}
+                         {/* Consider adding dynamic pages here as well if needed */}
                     </div>
                 </div>
             )}

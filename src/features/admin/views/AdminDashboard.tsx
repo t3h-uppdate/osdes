@@ -7,10 +7,7 @@ import { motion } from 'framer-motion'; // Import motion
 import supabase from '../../../config/supabaseConfig'; // Import Supabase client
 
 // UI Libraries & Icons
-import {
-  LayoutDashboard, FileEdit, Link2, Settings, FileText, Briefcase, // Added Briefcase
-  Image as ImageIcon
-} from 'lucide-react';
+// Icons are now handled by IconRenderer via Sidebar and adminNavItems config
 
 // Context
 // NotificationProvider is already wrapping the app in App.tsx
@@ -33,22 +30,10 @@ import { getStaticSectionName } from '../utils/helpers'; // Moved general helper
 
 // --- Constants ---
 import { pageVariants, pageTransition } from '../../../config/animations'; // Import shared animations
+import { adminNavItems } from '../config/navigationConfig'; // Import nav items
 
 // Removed local animation variants and transition
-
 // Mock data for dashboard widgets (Consider moving to a separate file or fetching if dynamic)
-
-// Navigation items (Consider moving to a configuration file if it grows)
-const navItems = [
-  { icon: <LayoutDashboard size={20} />, label: 'Dashboard', tab: 'dashboard' },
-  { icon: <FileText size={20} />, label: 'Pages', tab: 'pages' },
-  { icon: <FileEdit size={20} />, label: 'Projects', tab: 'projects' },
-  { icon: <Briefcase size={20} />, label: 'Services', tab: 'services' }, // Added Services section
-  { icon: <ImageIcon size={20} />, label: 'Media', tab: 'media' }, // Use the alias ImageIcon
-  { icon: <ImageIcon size={20} />, label: 'Hero Images', tab: 'heroImages' }, // Added Hero Images section
-  { icon: <Link2 size={20} />, label: 'Social Links', tab: 'socialLinks' },
-  { icon: <Settings size={20} />, label: 'Settings', tab: 'generalInfo' },
-];
 
 // --- Component ---
 
@@ -95,6 +80,8 @@ const AdminDashboard: React.FC = () => {
     isLoading,
     saveStatus,
     handleSiteConfigChange, // Use new handler for config
+    handleInputChange,      // Destructure the generic input handler
+    handleLinkListChange,   // Destructure the link list handler
     handleTranslationChange, // Use new handler for individual translations
     saveSiteConfig,         // Use new save function for config
     saveTranslation,        // Use new save function for individual translations
@@ -161,7 +148,7 @@ const AdminDashboard: React.FC = () => {
             isSidebarOpen={isSidebarOpen}
             isDesktopSidebarCollapsed={isDesktopSidebarCollapsed}
             activeTab={activeTab}
-            navItems={navItems} // Pass navItems defined above
+            navItems={adminNavItems} // Use imported adminNavItems
             onTabClick={(tab) => {
               setActiveTab(tab);
               if (isMobile) {
@@ -201,7 +188,9 @@ const AdminDashboard: React.FC = () => {
                 translationsData={translationsData}
                 editingPath={editingPath} // Keep if used by other tabs
                 setEditingPath={setEditingPath} // Keep if used by other tabs
-                handleSiteConfigChange={handleSiteConfigChange}
+                handleSiteConfigChange={handleSiteConfigChange} // Pass this back as it's required by the props type
+                handleInputChange={handleInputChange} // Pass the generic input handler
+                handleLinkListChange={handleLinkListChange} // Pass link list handler
                 handleTranslationChange={handleTranslationChange}
                 // Pass save-related props needed by specific tabs
                 saveStatus={saveStatus}

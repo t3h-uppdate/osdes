@@ -10,6 +10,7 @@ import GeneralInfoSection from '../sections/GeneralInfo/GeneralInfoSection';
 import PagesSection from '../sections/Pages/PagesSection';
 import ImageUploader from '../sections/ImageManagement/components/ImageUploader'; // Corrected path
 import HeroImageManagementSection from '../sections/HeroImageManagement/HeroImageManagementSection'; // Added import
+import LinkManagementSection from '../sections/LinkManagement/LinkManagementSection'; // Import the new section
 
 // Import Utilities and Types (Adjust path as necessary)
 // Corrected utility and type imports
@@ -32,7 +33,12 @@ interface TabContentRendererProps {
   translationsData: TranslationsData;   // Use new translations type (key-value pairs)
   editingPath: string | null;           // Keep if used by other tabs
   setEditingPath: (path: string | null) => void; // Keep if used by other tabs
-  handleSiteConfigChange: (key: keyof Omit<SiteConfigData, 'id' | 'updated_at'>, value: string | null) => void; // Use new handler
+  // Update handleSiteConfigChange type to exclude link keys (keep if needed for non-input changes)
+  handleSiteConfigChange: (key: keyof Omit<SiteConfigData, 'id' | 'updated_at' | 'nav_links' | 'footer_links' | 'footer_links_title'>, value: string | null) => void;
+  // Add the generic input handler prop
+  handleInputChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  // Add handleLinkListChange prop
+  handleLinkListChange: (key: 'nav_links' | 'footer_links', links: { text: string; url: string }[]) => void;
   handleTranslationChange: (key: string, value: string) => void; // Use new handler
   // Pass save-related props needed by specific tabs
   saveStatus: string;
@@ -108,11 +114,12 @@ const renderDashboardContent = () => {
 const TabContentRenderer: React.FC<TabContentRendererProps> = ({
   activeTab,
   isLoading,
-  siteConfig,         // Use new prop name
-  translationsData,   // Use new prop name
-  handleSiteConfigChange, // Use new prop name
-  handleTranslationChange, // Use new prop name
-  // Destructure new save-related props
+  siteConfig,
+  translationsData,
+  handleSiteConfigChange, // Destructure this as it's needed by GeneralInfoSection
+  handleInputChange, // Destructure the new handler
+  handleLinkListChange,
+  handleTranslationChange,
   saveStatus,
   saveSiteConfig,
   saveTranslation,
@@ -144,8 +151,21 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
     // If it needs onUploadSuccess for specific actions elsewhere, it might need adjustment
     return <ImageUploader onUploadSuccess={(url) => console.log('Uploaded to general media:', url)} />;
   }
-  if (activeTab === 'heroImages') { // Added condition for hero images
+  if (activeTab === 'heroImages') {
     return <HeroImageManagementSection />;
+  }
+  // Add condition for linkManagement
+  if (activeTab === 'linkManagement') {
+    return (
+      <LinkManagementSection
+        siteConfig={siteConfig}
+        handleLinkListChange={handleLinkListChange}
+        handleInputChange={handleInputChange} // Pass the input handler
+        saveSiteConfig={saveSiteConfig}
+        isLoading={isLoading}
+        saveStatus={saveStatus}
+      />
+    );
   }
   // Handle generalInfo explicitly here
   if (activeTab === 'generalInfo') {
@@ -153,7 +173,8 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
       <GeneralInfoSection
           siteConfig={siteConfig} // Pass new prop
           translationsData={translationsData} // Pass new prop
-          handleSiteConfigChange={handleSiteConfigChange} // Pass new handler
+          handleSiteConfigChange={handleSiteConfigChange} // Pass the required handler
+          handleInputChange={handleInputChange} // Pass the generic input handler
           handleTranslationChange={handleTranslationChange} // Pass new handler
           saveSiteConfig={saveSiteConfig} // Pass new save function
           saveTranslation={saveTranslation} // Pass new save function

@@ -1,8 +1,9 @@
 import React from 'react';
+import IconRenderer from '../../../components/common/IconRenderer'; // Import IconRenderer
 
 // Define the structure for a navigation item
 interface NavItem {
-  icon: React.ReactNode;
+  iconName: string; // Changed from icon: React.ReactNode
   label: string;
   tab: string;
 }
@@ -58,9 +59,9 @@ const Sidebar: React.FC<SidebarProps> = ({
               aria-current={activeTab === item.tab ? 'page' : undefined}
               title={isDesktopSidebarCollapsed && !isMobile ? item.label : undefined} // Show tooltip when collapsed
             >
-              {/* Icon styling */}
+              {/* Icon styling - Use IconRenderer */}
               <span className={`flex-shrink-0 ${activeTab === item.tab ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
-                {item.icon}
+                <IconRenderer iconName={item.iconName} size={20} aria-hidden="true" /> {/* Use IconRenderer */}
               </span>
               {/* Label styling and visibility */}
               <span className={`flex-1 text-left ${(isMobile && isSidebarOpen) || (!isMobile && !isDesktopSidebarCollapsed) ? 'inline' : 'hidden'}`}>

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; // Removed useCallback, useRef
 // Icons
 import IconRenderer from '../../../../components/common/IconRenderer'; // Import central renderer
-// Import new types from useAdminData
+// Removed Dnd imports as they are no longer needed here
+// Import types from useAdminData (excluding link list handler)
 import { SiteConfigData, TranslationsData } from '../../hooks/useAdminData';
 
 // Define a list of icons suitable for logos
@@ -22,12 +23,15 @@ const LOGO_ICON_OPTIONS = [
 
 // Define the props the component will accept based on the new hook structure
 interface GeneralInfoSectionProps {
-  siteConfig: SiteConfigData;
+  siteConfig: SiteConfigData; // Still need siteConfig for logo etc.
   translationsData: TranslationsData;
-  handleSiteConfigChange: (key: keyof Omit<SiteConfigData, 'id' | 'updated_at'>, value: string | null) => void;
+  // Add the generic input handler prop
+  handleInputChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  // Keep handleSiteConfigChange if needed for other non-input config changes, but update Omit
+  handleSiteConfigChange: (key: keyof Omit<SiteConfigData, 'id' | 'updated_at' | 'nav_links' | 'footer_links' | 'footer_links_title'>, value: string | null) => void;
   handleTranslationChange: (key: string, value: string) => void;
-  saveSiteConfig: () => Promise<void>;
-  saveTranslation: (key: string, value: string) => Promise<void>; // Add this if needed for individual saves
+  saveSiteConfig: () => Promise<void>; // Keep saveSiteConfig for logo etc.
+  saveTranslation: (key: string, value: string) => Promise<void>;
   isLoading: boolean;
   saveStatus: string;
 }
@@ -148,16 +152,17 @@ const EditableField: React.FC<{
       )}
     </div>
   );
-};
+}; // <-- Added missing closing brace here
 
-
+// --- GeneralInfoSection Component ---
 const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
   siteConfig,
   translationsData,
-  handleSiteConfigChange,
+  handleInputChange, // Destructure the new handler
+  // handleSiteConfigChange, // Only destructure if used below
   handleTranslationChange,
   saveSiteConfig,
-  saveTranslation, // Destructure the new save function
+  saveTranslation,
   isLoading,
   saveStatus,
 }) => {
@@ -171,34 +176,33 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
   const getTranslation = (key: string, defaultValue: string = '') => translationsData[key] ?? defaultValue;
 
   // Define the fields to display, mapping labels to keys and handlers
-  // This makes rendering cleaner
+  // This makes rendering cleaner - REMOVED link list related sections
   const fieldsConfig = [
-    // Site Config Fields
+    // Site Config Fields (Simple ones)
     { section: 'generalInfo', label: 'Logo Url', identifier: 'logo_url', type: 'config', isUrl: true },
-    { section: 'generalInfo', label: 'Logo Icon', identifier: 'logo_icon_name', type: 'config', isSelect: true, selectOptions: LOGO_ICON_OPTIONS }, // Use select for icon
+    { section: 'generalInfo', label: 'Logo Icon', identifier: 'logo_icon_name', type: 'config', isSelect: true, selectOptions: LOGO_ICON_OPTIONS },
     // Translation Fields (using dot notation keys)
     { section: 'generalInfo', label: 'Site Title', identifier: 'site.title', type: 'translation' },
     { section: 'generalInfo', label: 'Site Role', identifier: 'site.role', type: 'translation' },
     { section: 'hero', label: 'Hero Title', identifier: 'hero.title', type: 'translation' },
     { section: 'hero', label: 'Hero Title 2', identifier: 'hero.title2', type: 'translation' },
     { section: 'hero', label: 'Hero Subtitle', identifier: 'hero.subtitle', type: 'translation', isTextarea: true },
-    { section: 'hero', label: 'Hero Button Text', identifier: 'hero.ctaButtonText', type: 'translation' }, // Adjusted key if needed
+    { section: 'hero', label: 'Hero Button Text', identifier: 'hero.ctaButtonText', type: 'translation' },
     { section: 'about', label: 'About Description', identifier: 'about.description', type: 'translation', isTextarea: true },
-    { section: 'footer', label: 'Footer Copyright', identifier: 'footer.copyright', type: 'translation' },
+    { section: 'footerText', label: 'Footer Copyright', identifier: 'footer.copyright', type: 'translation' },
     { section: 'contactInfo', label: 'Contact Phone', identifier: 'contact.phone', type: 'translation' },
     { section: 'contactInfo', label: 'Contact Address', identifier: 'contact.address', type: 'translation' },
-    { section: 'contactInfo', label: 'Contact Email', identifier: 'contact.email', type: 'translation' }, // Adjusted key if needed
-    // Contact Form Fields (assuming keys like 'contact.form.nameLabel')
+    { section: 'contactInfo', label: 'Contact Email', identifier: 'contact.email', type: 'translation' },
+    // Contact Form Fields
     { section: 'contactForm', label: 'Name Label', identifier: 'contact.form.nameLabel', type: 'translation' },
     { section: 'contactForm', label: 'Email Label', identifier: 'contact.form.emailLabel', type: 'translation' },
     { section: 'contactForm', label: 'Message Label', identifier: 'contact.form.messageLabel', type: 'translation' },
     { section: 'contactForm', label: 'Submit Button', identifier: 'contact.form.submitButton', type: 'translation' },
-    // Add other translation keys as needed
   ];
 
   // Group fields by section for rendering
   const groupedFields = fieldsConfig.reduce((acc, field) => {
-    const section = field.section; // Use defined section key
+    const section = field.section;
     if (!acc[section]) {
       acc[section] = [];
     }
@@ -207,11 +211,11 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
   }, {} as Record<string, typeof fieldsConfig>);
 
 
-  // Function to render a section card
-  const renderSectionCard = (sectionKey: string, title: string, iconName: string) => ( // Pass iconName string
+  // Function to render a section card with simple EditableFields
+  const renderSimpleSectionCard = (sectionKey: string, title: string, iconName: string) => (
     <div key={sectionKey} className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border border-gray-200 dark:border-gray-600 space-y-4">
       <h3 className="text-lg font-semibold text-gray-800 dark:text-white capitalize border-b border-gray-300 dark:border-gray-600 pb-2 mb-4 flex items-center gap-2">
-        <IconRenderer iconName={iconName} size={18} className="text-blue-500" /> {/* Use IconRenderer */}
+        <IconRenderer iconName={iconName} size={18} className="text-blue-500" />
         {title}
       </h3>
       {groupedFields[sectionKey]?.map(field => (
@@ -220,56 +224,62 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
           label={field.label}
           identifier={field.identifier}
           value={field.type === 'config'
-            // Type assertion needed here as identifier might not be a valid key directly
-            // Ensure value is always a string for EditableField
-            ? String(siteConfig[field.identifier as keyof SiteConfigData] ?? '')
+            ? String(siteConfig[field.identifier as keyof SiteConfigData] ?? '') // Use full SiteConfigData keys here
             : getTranslation(field.identifier)}
           onChange={field.type === 'config'
-            // Type assertion needed here as well
-            ? (v: string) => handleSiteConfigChange(field.identifier as keyof Omit<SiteConfigData, 'id' | 'updated_at'>, v)
+            // For config fields, use handleInputChange by creating a synthetic event
+            ? (v: string) => handleInputChange({ target: { name: field.identifier, value: v } } as React.ChangeEvent<HTMLInputElement | HTMLSelectElement>)
+            // For translation fields, continue using handleTranslationChange
             : (v: string) => handleTranslationChange(field.identifier, v)}
-          // Optionally trigger individual save on blur for translations
+          // Save translations on blur/enter, config saves via main button
           onSave={field.type === 'translation' ? () => saveTranslation(field.identifier, getTranslation(field.identifier)) : undefined}
           isEditing={editingIdentifier === field.identifier}
           setEditingIdentifier={setEditingIdentifier}
           isUrl={field.isUrl}
           isTextarea={field.isTextarea}
-          isSelect={field.isSelect} // Pass select flag
-          selectOptions={field.selectOptions} // Pass options
+          isSelect={field.isSelect}
+          selectOptions={field.selectOptions}
         />
       ))}
     </div>
   );
 
+  // REMOVED renderLinkListSectionCard function
+
+
   return (
-    // Main grid container
+    // Main grid container - Reverted to 2 columns as link lists are removed
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-gray-900 dark:text-gray-100">
 
       {/* Column 1 */}
       <div className="space-y-6">
-        {renderSectionCard('generalInfo', 'General Site Info', 'Info')}
-        {renderSectionCard('hero', 'Hero Section', 'Image')}
+        {renderSimpleSectionCard('generalInfo', 'General Site Info', 'Info')}
+        {renderSimpleSectionCard('hero', 'Hero Section Text', 'Image')}
+        {renderSimpleSectionCard('about', 'About Section Text', 'User')}
       </div>
 
       {/* Column 2 */}
       <div className="space-y-6">
-        {renderSectionCard('about', 'About Section', 'User')}
-        {renderSectionCard('footer', 'Footer Section', 'Copyright')}
-        {renderSectionCard('contactInfo', 'Contact Info', 'Phone')}
-        {renderSectionCard('contactForm', 'Contact Form Text', 'MessageSquare')}
+        {renderSimpleSectionCard('footerText', 'Footer Text', 'Copyright')}
+        {renderSimpleSectionCard('contactInfo', 'Contact Info', 'Phone')}
+        {renderSimpleSectionCard('contactForm', 'Contact Form Text', 'MessageSquare')}
       </div>
 
-      {/* Save Changes Area - Primarily for Site Config */}
+      {/* Save Changes Area - Spans all columns */}
+      {/* Note: This save button still saves the *entire* siteConfig, including links, even though they aren't edited here. */}
+      {/* Consider if a separate save button is needed in LinkManagementSection or if this is acceptable. */}
       <div className="md:col-span-2 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end items-center gap-4">
-        {saveStatus && (
-          <span className="text-sm text-gray-500 dark:text-gray-400 italic">{saveStatus}</span>
+        {saveStatus && !isLoading && (
+          <span className={`text-sm italic ${saveStatus.includes('Error') ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            {saveStatus}
+          </span>
         )}
         <button
           onClick={saveSiteConfig} // Save button now primarily saves the config settings
           className="inline-flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           disabled={isSaveDisabled}
         >
-          {isSaveDisabled && saveStatus.includes('Saving') ? (
+          {isLoading && saveStatus.includes('Saving') ? ( // Show spinner only when actively saving
             <>
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

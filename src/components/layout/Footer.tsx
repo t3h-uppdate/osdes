@@ -23,18 +23,27 @@ function Footer() {
               <span className="ml-2 text-xl font-semibold text-white">{t('site.title', 'OS Design')}</span>
             </div>
             <p className="mt-4 text-gray-400">
-              {t('footer.description', 'Building better digital experiences.')} {/* Example new key */}
+              {t('site.role', 'Building better digital experiences.')} {/* Example new key */}
             </p>
           </div>
           <div>
-            <h3 className="text-white font-semibold mb-4">{t('ui.quickLinks', 'Quick Links')}</h3>
+            {/* Use dynamic title from siteConfig, fallback to 'Quick Links' */}
+            <h3 className="text-white font-semibold mb-4">{siteConfig?.footer_links_title || 'Quick Links'}</h3>
             <ul className="space-y-2">
-              <li><a href="#home" className="text-gray-400 hover:text-white">{t('ui.home', 'Home')}</a></li>
-              <li><a href="#services" className="text-gray-400 hover:text-white">{t('services.title', 'Services')}</a></li>
-              <li><a href="#projects" className="text-gray-400 hover:text-white">{t('projects.title', 'Projects')}</a></li>
-              <li><a href="#blog" className="text-gray-400 hover:text-white">{t('ui.blog', 'Blog')}</a></li>
-              <li><a href="#about" className="text-gray-400 hover:text-white">{t('about.title', 'About')}</a></li>
-              <li><a href="#contact" className="text-gray-400 hover:text-white">{t('contact.title', 'Contact')}</a></li>
+              {/* Dynamically render footer links */}
+              {siteConfig?.footer_links && siteConfig.footer_links.length > 0 ? (
+                siteConfig.footer_links.map((link, index) => (
+                  <li key={index}>
+                    <a href={link.url} className="text-gray-400 hover:text-white">
+                      {link.text}
+                    </a>
+                  </li>
+                ))
+              ) : (
+                // Fallback if no links are configured
+                <li><span className="text-gray-500 italic">No links configured.</span></li>
+              )}
+              {/* Keep Admin Login separate if desired */}
               <li><Link to="/admin" className="text-gray-400 hover:text-white">{t('ui.adminLogin', 'Admin Login')}</Link></li>
             </ul>
           </div>

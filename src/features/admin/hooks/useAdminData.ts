@@ -13,6 +13,9 @@ export interface SiteConfigData {
   id?: number; // Should always be 1
   logo_url?: string | null;
   logo_icon_name?: string | null; // New field for the icon name
+  nav_links?: { text: string; url: string }[] | null; // Added for navigation links
+  footer_links?: { text: string; url: string }[] | null; // Added for footer links
+  footer_links_title?: string | null; // New field for the footer links title
   // Add other non-translatable config fields here if any (e.g., theme)
   updated_at?: string;
 }
@@ -22,6 +25,9 @@ const defaultSiteConfig: SiteConfigData = {
   id: SITE_CONFIG_ID,
   logo_url: "",
   logo_icon_name: null, // Default to null
+  nav_links: [], // Default to empty array
+  footer_links: [], // Default to empty array
+  footer_links_title: 'Quick Links', // Default title
 };
 
 // Define type for the translations data structure (key-value pairs)
@@ -62,7 +68,7 @@ export const useAdminData = () => {
         // Fetch site_config
         const { data: configResult, error: configError } = await supabase
           .from(SITE_CONFIG_TABLE)
-          .select('*')
+          .select('*, nav_links, footer_links') // Select new JSON columns
           .eq('id', SITE_CONFIG_ID)
           .maybeSingle(); // Use maybeSingle as the row might not exist initially
 
@@ -132,11 +138,33 @@ export const useAdminData = () => {
 
   // --- Input Handlers ---
 
-  // Handler for site config changes
-  const handleSiteConfigChange = useCallback((key: keyof Omit<SiteConfigData, 'id' | 'updated_at'>, value: string | null | undefined) => { // Allow undefined for potential clearing
+  // Handler for simple site config changes (strings, nulls)
+  // Updated Omit to include the new footer_links_title
+  const handleSiteConfigChange = useCallback((key: keyof Omit<SiteConfigData, 'id' | 'updated_at' | 'nav_links' | 'footer_links' | 'footer_links_title'>, value: string | null | undefined) => {
     setSiteConfig(prev => ({
       ...prev,
       [key]: value,
+    }));
+    setSaveStatus(''); // Clear status on input change
+  }, []);
+
+  // Generic handler for input changes (covers text, textarea, select)
+  // This can handle footer_links_title and other simple string fields
+  const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = event.target;
+    setSiteConfig(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+    setSaveStatus(''); // Clear status on input change
+  }, []);
+
+
+  // Specific handler for updating link arrays (replaces the whole array)
+  const handleLinkListChange = useCallback((key: 'nav_links' | 'footer_links', links: { text: string; url: string }[]) => {
+    setSiteConfig(prev => ({
+      ...prev,
+      [key]: links,
     }));
     setSaveStatus(''); // Clear status on input change
   }, []);
@@ -271,7 +299,9 @@ export const useAdminData = () => {
     setSaveStatus,
     setSiteConfig, // Expose setter for direct manipulation if needed
     setTranslationsData, // Expose setter for direct manipulation if needed
-    handleSiteConfigChange,
+    handleSiteConfigChange, // Keep for specific non-input changes if needed later
+    handleInputChange, // Add the generic input handler
+    handleLinkListChange,
     handleTranslationChange,
     saveSiteConfig,
     saveTranslation,
