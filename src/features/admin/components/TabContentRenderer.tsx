@@ -11,6 +11,7 @@ import PagesSection from '../sections/Pages/PagesSection';
 import ImageUploader from '../sections/ImageManagement/components/ImageUploader'; // Corrected path
 import HeroImageManagementSection from '../sections/HeroImageManagement/HeroImageManagementSection'; // Added import
 import LinkManagementSection from '../sections/LinkManagement/LinkManagementSection'; // Import the new section
+import ProductsSection from '../sections/Products/ProductsSection'; // Import Products section
 
 // Import Utilities and Types (Adjust path as necessary)
 // Corrected utility and type imports
@@ -374,6 +375,11 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
   }
   if (activeTab === 'services') {
     return <ServicesSection />; // Assuming ServicesSection doesn't need props from here for now
+  }
+
+  // Add condition for products tab
+  if (activeTab === 'products') {
+    return <ProductsSection />; // Render the new Products section
   }
 
   // TODO: Refactor the rendering logic for any remaining tabs that might have used

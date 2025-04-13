@@ -18,6 +18,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner'; // Import the 
 import Footer from '../components/layout/Footer'; // Import the new Footer component
 import HeroSection from '../features/hero/components/HeroSection'; // Import the new HeroSection component
 import SocialLinksSection from '../components/common/SocialLinksSection'; // Import the new SocialLinksSection component
+import ProductsSection from '../features/products/components/ProductsSection'; // Import the new Products section
 
 
 // Removed local animation variants and transition
@@ -87,11 +88,11 @@ function MainSite() {
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Services Section */}
-      <ServicesSection
-        sectionTitle={t('services.title', 'Our Services')}
-        sectionSubtitle={t('ui.everythingYouNeed', 'Everything you need for your project.')}
-      />
+      {/* Services Section - Now fetches its own titles */}
+      <ServicesSection />
+
+      {/* Products Section */}
+      <ProductsSection />
 
       {/* Projects Section - Now fetches its own data and title from context */}
       <ProjectsSection

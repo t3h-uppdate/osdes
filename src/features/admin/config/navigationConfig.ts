@@ -11,6 +11,7 @@ export const adminNavItems: AdminNavItem[] = [
   { iconName: 'FileText', label: 'Pages', tab: 'pages' },
   { iconName: 'FileEdit', label: 'Projects', tab: 'projects' },
   { iconName: 'Briefcase', label: 'Services', tab: 'services' },
+  { iconName: 'Package', label: 'Products', tab: 'products' }, // Added Products nav item
   { iconName: 'Upload', label: 'Upload', tab: 'media' },
   { iconName: 'Image', label: 'Hero Images', tab: 'heroImages' },
   { iconName: 'Link2', label: 'Social Links', tab: 'socialLinks' },
