@@ -17,14 +17,11 @@ import LinkManagementSection from '../sections/LinkManagement/LinkManagementSect
 // Import new types from useAdminData
 import { SiteConfigData, TranslationsData } from '../hooks/useAdminData';
 import LoadingSpinner from '../../../components/common/LoadingSpinner'; // Import the spinner
+import { useDashboardStats, PageViewDataPoint } from '../hooks/useDashboardStats'; // Import the new hook AND PageViewDataPoint from correct file
+// Import Recharts components
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-// Mock data for dashboard widgets (Should ideally come from props or context)
-const stats = {
-  pageViews: '1,234',
-  totalPages: '12',
-  comments: '45',
-  averageRating: '4.8'
-};
+// Removed mock stats object
 
 interface TabContentRendererProps {
   activeTab: string | null;
@@ -44,7 +41,8 @@ interface TabContentRendererProps {
   saveStatus: string;
   saveSiteConfig: () => Promise<void>; // Use new save function
   saveTranslation: (key: string, value: string) => Promise<void>; // Add new save function
-  // handleDeleteItem is removed
+  // Add setActiveTab prop
+  setActiveTab: (tab: string | null) => void;
 }
 
 // Helper function to create styled stat cards - Updated type definition
@@ -62,51 +60,219 @@ const StatCard: React.FC<{ title: string; value: string; iconName: string; descr
     </div>
 );
 
+// Define props for DashboardContent
+interface DashboardContentProps {
+  setActiveTab: (tab: string | null) => void;
+}
 
-const renderDashboardContent = () => {
+// This function now uses the hook to fetch and display stats
+const DashboardContent: React.FC<DashboardContentProps> = ({ setActiveTab }) => {
+  const { stats, isLoading, error } = useDashboardStats();
+
   // Define colors for icons
   const iconColors = {
     pageViews: { bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-600 dark:text-blue-300' },
     totalPages: { bg: 'bg-green-100 dark:bg-green-900', text: 'text-green-600 dark:text-green-300' },
-    comments: { bg: 'bg-purple-100 dark:bg-purple-900', text: 'text-purple-600 dark:text-purple-300' },
-    averageRating: { bg: 'bg-yellow-100 dark:bg-yellow-900', text: 'text-yellow-600 dark:text-yellow-300' },
+    totalProjects: { bg: 'bg-indigo-100 dark:bg-indigo-900', text: 'text-indigo-600 dark:text-indigo-300' },
+    totalServices: { bg: 'bg-purple-100 dark:bg-purple-900', text: 'text-purple-600 dark:text-purple-300' }, // Added color for services
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <LoadingSpinner size={32} color="text-indigo-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg text-center">
+        <p className="text-red-700 dark:text-red-200 font-medium">Error loading dashboard stats:</p>
+        <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+        {/* Optionally add a retry button here that calls refetch() */}
+      </div>
+    );
+  }
+
+  // Format numbers with commas for display
+  const formatNumber = (num: number | undefined | null): string => {
+    return num?.toLocaleString() ?? '0';
+  };
+
+  // Helper to format date for chart axis (e.g., "Apr 13")
+  const formatAxisDate = (dateString: string): string => {
+    const date = new Date(dateString + 'T00:00:00'); // Ensure correct parsing
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Prepare data for the chart, ensuring all last 7 days are present, even with 0 views
+  const prepareChartData = (rawData: PageViewDataPoint[]): { date: string; views: number }[] => {
+    const chartDataMap = new Map<string, number>();
+    const today = new Date();
+
+    // Initialize map with the last 7 days having 0 views
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      chartDataMap.set(dateString, 0);
+    }
+
+    // Populate map with actual data
+    rawData.forEach(point => {
+      chartDataMap.set(point.view_date, point.count);
+    });
+
+    // Convert map back to array sorted by date
+    return Array.from(chartDataMap.entries()).map(([date, views]) => ({
+      date: formatAxisDate(date), // Format date for display
+      views,
+    }));
+  };
+
+  const chartData = stats ? prepareChartData(stats.pageViewsLast7Days) : [];
+
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-      <StatCard
-        title="Page Views"
-        value={stats.pageViews}
-        iconName="Eye" // Pass icon name
-        description="Last 30 days"
+    <> {/* Wrap content in a React Fragment */}
+      {/* Stat Cards Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+        <StatCard
+          title="Page Views (Today)"
+        value={formatNumber(stats?.pageViewsToday)} // Use renamed prop
+        iconName="Eye"
+        description="Requires page view tracking setup"
         iconBgColor={iconColors.pageViews.bg}
         iconTextColor={iconColors.pageViews.text}
       />
       <StatCard
         title="Total Pages"
-        value={stats.totalPages}
-        iconName="FileText" // Pass icon name
-        description="Published content"
+        value={formatNumber(stats?.totalPages)}
+        iconName="FileText"
+        description="Published pages count" // Updated description
         iconBgColor={iconColors.totalPages.bg}
         iconTextColor={iconColors.totalPages.text}
       />
+      {/* Added Total Projects card */}
       <StatCard
-        title="Comments"
-        value={stats.comments}
-        iconName="MessageSquare" // Pass icon name
-        description="Awaiting response"
-        iconBgColor={iconColors.comments.bg}
-        iconTextColor={iconColors.comments.text}
+        title="Total Projects"
+        value={formatNumber(stats?.totalProjects)}
+        iconName="Store"
+        description="Published projects count"
+        iconBgColor={iconColors.totalProjects.bg}
+        iconTextColor={iconColors.totalProjects.text}
       />
+      {/* Added Total Services card */}
       <StatCard
-        title="Average Rating"
-        value={stats.averageRating}
-        iconName="Star" // Pass icon name
-        description="Based on feedback"
-        iconBgColor={iconColors.averageRating.bg}
-        iconTextColor={iconColors.averageRating.text}
+        title="Total Services"
+        value={formatNumber(stats?.totalServices)}
+        iconName="Briefcase" // Example icon, adjust if needed
+        description="Published services count"
+        iconBgColor={iconColors.totalServices.bg}
+        iconTextColor={iconColors.totalServices.text}
       />
     </div>
+
+    {/* Quick Actions Section */}
+    <div className="mt-8">
+      <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Quick Actions</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Add New Page Button */}
+        <button
+          onClick={() => setActiveTab('pages')}
+          className="flex items-center justify-center px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
+        >
+          <IconRenderer iconName="PlusCircle" size={20} className="mr-2" />
+          Add New Page
+        </button>
+
+        {/* Add New Project Button */}
+        <button
+          onClick={() => setActiveTab('projects')}
+          className="flex items-center justify-center px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+        >
+          <IconRenderer iconName="Store" size={20} className="mr-2" />
+          Add New Project
+        </button>
+
+        {/* Add New Service Button */}
+        <button
+          onClick={() => setActiveTab('services')}
+          className="flex items-center justify-center px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800"
+        >
+          <IconRenderer iconName="Briefcase" size={20} className="mr-2" />
+          Add New Service
+        </button>
+
+        {/* Upload Media Button */}
+        <button
+          onClick={() => setActiveTab('media')}
+          className="flex items-center justify-center px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800"
+        >
+          <IconRenderer iconName="UploadCloud" size={20} className="mr-2" />
+          Upload Media
+        </button>
+      </div>
+    </div>
+
+    {/* Page Views Chart Section */}
+    <div className="mt-8">
+        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Page Views (Last 7 Days)</h2>
+        <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-600" style={{ height: '300px' }}>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{
+                  top: 5, right: 20, left: -10, bottom: 5, // Adjusted margins
+                }}
+              >
+                {/* Removed dark: styling prefixes */}
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 12, fill: '#6b7280' }} // Tailwind gray-500
+                  axisLine={{ stroke: '#d1d5db' }} // Tailwind gray-300
+                  tickLine={{ stroke: '#d1d5db' }}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                  axisLine={{ stroke: '#d1d5db' }}
+                  tickLine={{ stroke: '#d1d5db' }}
+                  allowDecimals={false} // Ensure whole numbers for views
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.5rem',
+                    fontSize: '12px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  }}
+                  labelStyle={{ fontWeight: 'bold', color: '#1f2937' }} // Tailwind gray-800
+                  itemStyle={{ color: '#3b82f6' }} // Tailwind blue-500
+                />
+                <Legend wrapperStyle={{ fontSize: '14px', paddingTop: '10px' }} />
+                <Line
+                  type="monotone"
+                  dataKey="views"
+                  stroke="#3b82f6" // Tailwind blue-500
+                  strokeWidth={2}
+                  activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+                  dot={{ r: 4, fill: '#3b82f6' }}
+                  name="Page Views" // Name for Legend and Tooltip
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              No page view data available for the last 7 days.
+            </div>
+          )}
+        </div>
+      </div>
+    </> // Close React Fragment
   );
 };
 
@@ -123,23 +289,28 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
   saveStatus,
   saveSiteConfig,
   saveTranslation,
+  setActiveTab, // Destructure setActiveTab here
 }) => {
-  // isLoading is already destructured above
+  // General isLoading prop is for siteConfig/translations loading, not dashboard stats
+  // DashboardContent handles its own loading state internally.
+
+  // Render dashboard if no tab or 'dashboard' is selected
+  if (!activeTab || activeTab === 'dashboard') {
+    // Render the new DashboardContent component which uses the hook
+    // Pass setActiveTab down to DashboardContent
+    return <DashboardContent setActiveTab={setActiveTab} />;
+  }
+
+  // Loading state for other tabs (non-dashboard)
   if (isLoading) {
-    // Use the reusable LoadingSpinner component
     return (
       <div className="flex items-center justify-center py-20">
-        <LoadingSpinner size={48} color="text-indigo-500" /> {/* Use the spinner */}
+        <LoadingSpinner size={48} color="text-indigo-500" />
       </div>
     );
   }
 
-  // Render dashboard if no tab or 'dashboard' is selected
-  if (!activeTab || activeTab === 'dashboard') {
-    return renderDashboardContent();
-  }
-
-  // Corrected conditional rendering structure
+  // Conditional rendering for other tabs remains the same
   if (activeTab === 'socialLinks') {
     return <SocialLinksSection />;
   }

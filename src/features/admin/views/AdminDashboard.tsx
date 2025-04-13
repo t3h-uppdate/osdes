@@ -196,7 +196,8 @@ const AdminDashboard: React.FC = () => {
                 saveStatus={saveStatus}
                 saveSiteConfig={saveSiteConfig} // Pass the config save function
                 saveTranslation={saveTranslation} // Pass the translation save function
-                // handleDeleteItem is removed
+                // Pass setActiveTab for quick actions
+                setActiveTab={setActiveTab}
               />
             </div>
 
