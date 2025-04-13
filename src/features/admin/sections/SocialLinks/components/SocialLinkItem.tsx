@@ -99,13 +99,14 @@ const SocialLinkItem: React.FC<SocialLinkItemProps> = ({
 
   return (
     <div
-      className={`flex items-center gap-3 p-3 border border-gray-300 dark:border-gray-600 rounded mb-2 shadow-sm ${isEditing ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-700'}`}
+      // Base: flex, wrap for small screens, nowrap for medium+, align items differently based on screen size
+      className={`flex flex-wrap md:flex-nowrap items-start md:items-center gap-3 p-3 border border-gray-300 dark:border-gray-600 rounded mb-2 shadow-sm ${isEditing ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-700'}`}
     >
       {/* Display Mode */}
       {!isEditing && (
         <>
-          {/* Reordering Buttons */}
-          <div className="flex flex-col items-center justify-center mr-2">
+          {/* Reordering Buttons - Keep size consistent */}
+          <div className="flex flex-col items-center justify-center mr-2 flex-shrink-0">
             <button
               onClick={() => onMove(index, 'up')}
               disabled={index === 0}
@@ -124,91 +125,101 @@ const SocialLinkItem: React.FC<SocialLinkItemProps> = ({
             </button>
           </div>
 
-          {/* Link Details */}
-          <IconRenderer iconName={link.icon || 'HelpCircle'} size={20} className="text-gray-600 dark:text-gray-300 flex-shrink-0" />
-          <span className="flex-1 font-medium text-gray-800 dark:text-gray-100 truncate" title={link.name}>{link.name}</span>
-          <span className="flex-1 text-sm text-gray-500 dark:text-gray-400 truncate" title={link.url}>{link.url}</span>
-          {/* <span className="text-xs text-gray-400 dark:text-gray-500 w-8 text-center">{link.order}</span> */} {/* Order display removed for cleaner UI */}
+          {/* Link Details - Container grows, stacks vertically on small, row on medium+ */}
+          <div className="flex-grow flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-1 min-w-0 order-first md:order-none w-full md:w-auto mb-2 md:mb-0"> {/* Added container, responsive flex, order, width, margin */}
+            <IconRenderer iconName={link.icon || 'HelpCircle'} size={20} className="text-gray-600 dark:text-gray-300 flex-shrink-0 hidden sm:block" /> {/* Optionally hide icon on smallest screens */}
+            <div className="flex-grow min-w-0"> {/* Container for text to ensure truncation works */}
+               <span className="block font-medium text-gray-800 dark:text-gray-100 truncate" title={link.name}>{link.name}</span>
+               <span className="block text-sm text-gray-500 dark:text-gray-400 truncate" title={link.url}>{link.url}</span>
+            </div>
+          </div>
+          {/* <span className="text-xs text-gray-400 dark:text-gray-500 w-8 text-center">{link.order}</span> */} {/* Order display removed */}
 
-          {/* Action Buttons */}
-          <button
-            onClick={handleEdit}
-            className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-            aria-label="Edit social link"
-          >
-            <IconRenderer iconName="Edit" size={18} />
-          </button>
-          <button
-            onClick={() => onDelete(link.id)}
-            className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-            aria-label="Delete social link"
-          >
-            <IconRenderer iconName="Trash2" size={18} />
-          </button>
+          {/* Action Buttons - Grouped, shrinks, pushes right on medium+ */}
+          <div className="flex items-center gap-1 flex-shrink-0 ml-auto"> {/* Added container */}
+            <button
+              onClick={handleEdit}
+              className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              aria-label="Edit social link"
+            >
+              <IconRenderer iconName="Edit" size={18} />
+            </button>
+            <button
+              onClick={() => onDelete(link.id)}
+              className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+              aria-label="Delete social link"
+            >
+              <IconRenderer iconName="Trash2" size={18} />
+            </button>
+          </div> {/* Close action buttons container */}
         </>
       )}
 
       {/* Editing Mode */}
       {isEditing && (
         <>
-          {/* Placeholder for reorder controls area */}
-          <div className="flex flex-col items-center justify-center mr-2 opacity-30">
+          {/* Placeholder for reorder controls area - Keep size consistent */}
+          <div className="flex flex-col items-center justify-center mr-2 opacity-30 flex-shrink-0">
              <IconRenderer iconName="ArrowUp" size={16} />
               <IconRenderer iconName="ArrowDown" size={16} />
            </div>
 
-           {/* Platform Select Dropdown */}
-           <div className="flex items-center gap-1 flex-shrink-0 mr-2">
-             {/* Display the icon corresponding to the selected platform */}
-             <IconRenderer iconName={editData.icon || 'HelpCircle'} size={20} className="text-gray-500 dark:text-gray-400" />
-             <select
-               name="name" // The value represents the platform name
-               value={editData.name || ''} // Controlled by editData.name
-               onChange={handlePlatformChange} // Use the dedicated platform change handler
-               className="p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
-               aria-label="Select Platform"
-             >
-               <option value="" disabled>Select Platform</option>
+           {/* Inputs Container - Grows, stacks vertically on small, row on medium+ */}
+           <div className="flex-grow flex flex-col md:flex-row items-stretch md:items-center gap-3 min-w-0 order-first md:order-none w-full md:w-auto mb-2 md:mb-0"> {/* Added container, responsive flex, order, width, margin */}
+             {/* Platform Select Dropdown - Adjusted width */}
+             <div className="flex items-center gap-1 w-full md:w-auto md:flex-shrink-0">
+               <IconRenderer iconName={editData.icon || 'HelpCircle'} size={20} className="text-gray-500 dark:text-gray-400" />
+               <select
+                 name="name" // The value represents the platform name
+                 value={editData.name || ''} // Controlled by editData.name
+                 onChange={handlePlatformChange} // Use the dedicated platform change handler
+                 className="flex-grow p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500" // Use flex-grow
+                 aria-label="Select Platform"
+               >
+                 <option value="" disabled>Select Platform</option>
                {socialPlatforms.map(platform => (
                  <option key={platform.name} value={platform.name} className="bg-white dark:bg-gray-700">
                    {platform.name}
                  </option>
                ))}
              </select>
-           </div>
+             </div> {/* Close platform select container */}
 
-           {/* URL Input - Takes remaining space */}
-           <input
-             type="text"
-             name="url"
-             // Dynamically set placeholder based on selected platform's base URL
-             placeholder={
-               findPlatform(editData.name)?.baseUrl
-                 ? `e.g., ${findPlatform(editData.name)?.baseUrl}your-username`
-                 : "Full URL"
-             }
-             value={editData.url || ''}
-             onChange={handleUrlChange} // Use the dedicated URL change handler
-             className="flex-1 p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
-           />
+             {/* URL Input - Adjusted width */}
+             <input
+               type="text"
+               name="url"
+               // Dynamically set placeholder based on selected platform's base URL
+               placeholder={
+                 findPlatform(editData.name)?.baseUrl
+                   ? `e.g., ${findPlatform(editData.name)?.baseUrl}your-username`
+                   : "Full URL"
+               }
+               value={editData.url || ''}
+               onChange={handleUrlChange} // Use the dedicated URL change handler
+               className="w-full md:flex-1 p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500" // Added w-full md:flex-1
+             />
+           </div> {/* Close inputs container */}
 
-          {/* Action Buttons */}
-          <button
+          {/* Action Buttons - Grouped, shrinks, pushes right on medium+ */}
+          <div className="flex items-center gap-1 flex-shrink-0 ml-auto"> {/* Added container */}
+            <button
              onClick={handleSave}
              disabled={isSaving}
              className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 disabled:opacity-50"
-             aria-label="Save changes"
-           >
-             {isSaving ? <LoadingSpinner size={18} /> : <IconRenderer iconName="Save" size={18} />}
-           </button>
-           <button
-             onClick={handleCancel}
-             disabled={isSaving}
-             className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 disabled:opacity-50"
-             aria-label="Cancel edit"
-           >
-             <IconRenderer iconName="XCircle" size={18} />
-           </button>
+               aria-label="Save changes"
+             >
+               {isSaving ? <LoadingSpinner size={18} /> : <IconRenderer iconName="Save" size={18} />}
+             </button>
+             <button
+               onClick={handleCancel}
+               disabled={isSaving}
+               className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 disabled:opacity-50"
+               aria-label="Cancel edit"
+             >
+               <IconRenderer iconName="XCircle" size={18} />
+             </button>
+          </div> {/* Close action buttons container */}
         </>
       )}
     </div>

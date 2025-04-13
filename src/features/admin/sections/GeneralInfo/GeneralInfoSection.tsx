@@ -203,6 +203,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
     { section: 'contactForm', label: 'Message Label', identifier: 'contact.form.messageLabel', type: 'translation' },
     { section: 'contactForm', label: 'Submit Button', identifier: 'contact.form.submitButton', type: 'translation' },
     // Add new contact form fields
+    // Projects Section Title - REMOVED FROM HERE
 
   ];
 
@@ -262,6 +263,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
         {renderSimpleSectionCard('generalInfo', 'General Site Info', 'Info')}
         {renderSimpleSectionCard('hero', 'Hero Section Text', 'Image')}
         {renderSimpleSectionCard('about', 'About Section Text', 'User')}
+        {/* REMOVED Projects Section Card */}
       </div>
 
       {/* Column 2 */}

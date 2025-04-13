@@ -190,7 +190,16 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
 
   // Add specific checks for other sections
   if (activeTab === 'projects') {
-    return <ProjectsSection />; // Assuming ProjectsSection doesn't need props from here for now
+    // Pass the required siteConfig related props down
+    return (
+      <ProjectsSection
+        siteConfig={siteConfig}
+        handleInputChange={handleInputChange}
+        saveSiteConfig={saveSiteConfig}
+        isLoadingConfig={isLoading} // Pass general isLoading as isLoadingConfig
+        saveStatusConfig={saveStatus} // Pass general saveStatus as saveStatusConfig
+      />
+    );
   }
   if (activeTab === 'services') {
     return <ServicesSection />; // Assuming ServicesSection doesn't need props from here for now

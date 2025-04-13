@@ -93,10 +93,10 @@ function MainSite() {
         sectionSubtitle={t('ui.everythingYouNeed', 'Everything you need for your project.')}
       />
 
-      {/* Projects Section - Now fetches its own data */}
+      {/* Projects Section - Now fetches its own data and title from context */}
       <ProjectsSection
         // projects={projects} // Removed prop
-        title={t('projects.title', 'Featured Projects')}
+        // title={t('projects.title', 'Featured Projects')} // Removed title prop
       />
 
       {/* Blog Section */}

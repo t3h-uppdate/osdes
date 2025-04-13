@@ -11,9 +11,9 @@ export const adminNavItems: AdminNavItem[] = [
   { iconName: 'FileText', label: 'Pages', tab: 'pages' },
   { iconName: 'FileEdit', label: 'Projects', tab: 'projects' },
   { iconName: 'Briefcase', label: 'Services', tab: 'services' },
-  { iconName: 'Image', label: 'Media', tab: 'media' },
+  { iconName: 'Upload', label: 'Upload', tab: 'media' },
   { iconName: 'Image', label: 'Hero Images', tab: 'heroImages' },
   { iconName: 'Link2', label: 'Social Links', tab: 'socialLinks' },
-  { iconName: 'Link', label: 'Link Management', tab: 'linkManagement' },
+  { iconName: 'Navigation', label: 'Link Management', tab: 'linkManagement' },
   { iconName: 'Settings', label: 'Settings', tab: 'generalInfo' },
 ];

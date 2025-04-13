@@ -1,9 +1,15 @@
-import React, { useCallback } from 'react';
-import { DndProvider, useDrag, useDrop, DragSourceMonitor, DropTargetMonitor } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import React, { useCallback, useState } from 'react'; // Removed useEffect
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+  DroppableProvided,
+  DraggableProvided,
+  DraggableStateSnapshot,
+} from 'react-beautiful-dnd'; // Import react-beautiful-dnd components
 import IconRenderer from '../../../../components/common/IconRenderer';
 import { SiteConfigData } from '../../hooks/useAdminData'; // Import SiteConfigData type
-// Removed non-existent imports for Input and Label
 
 // Define a type for a single link item
 type LinkItem = { text: string; url: string };
@@ -23,43 +29,15 @@ interface LinkManagementSectionProps {
 const DraggableLinkItem: React.FC<{
   link: LinkItem;
   index: number;
-  listKey: 'nav_links' | 'footer_links'; // Added listKey to differentiate drag types if needed, though maybe not strictly necessary here
-  moveLink: (listKey: 'nav_links' | 'footer_links', dragIndex: number, hoverIndex: number) => void;
+  listKey: 'nav_links' | 'footer_links';
+  // Removed moveLink prop
   onUpdate: (listKey: 'nav_links' | 'footer_links', index: number, updatedLink: LinkItem) => void;
   onDelete: (listKey: 'nav_links' | 'footer_links', index: number) => void;
-}> = ({ link, index, listKey, moveLink, onUpdate, onDelete }) => {
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  const [, drop] = useDrop<{ index: number; listKey: 'nav_links' | 'footer_links' }, void, unknown>({
-    accept: `LINK_ITEM_${listKey.toUpperCase()}`, // Unique accept type per list
-    hover(item, monitor: DropTargetMonitor) {
-      if (!ref.current || item.listKey !== listKey) return; // Ensure we only interact with items from the same list
-      const dragIndex = item.index;
-      const hoverIndex = index;
-      if (dragIndex === hoverIndex) return;
-
-      const hoverBoundingRect = ref.current?.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      const clientOffset = monitor.getClientOffset();
-      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
-
-      moveLink(listKey, dragIndex, hoverIndex);
-      item.index = hoverIndex;
-    },
-  });
-
-  const [{ isDragging }, drag] = useDrag({
-    type: `LINK_ITEM_${listKey.toUpperCase()}`, // Unique type per list
-    item: { index, listKey },
-    collect: (monitor: DragSourceMonitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-
-  drag(drop(ref));
+  // Add props from react-beautiful-dnd Draggable
+  provided: DraggableProvided;
+  snapshot: DraggableStateSnapshot;
+}> = ({ link, index, listKey, onUpdate, onDelete, provided, snapshot }) => {
+  // Removed react-dnd hooks and refs
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate(listKey, index, { ...link, text: e.target.value });
@@ -69,32 +47,54 @@ const DraggableLinkItem: React.FC<{
     onUpdate(listKey, index, { ...link, url: e.target.value });
   };
 
+  // Removed duplicate handlers
+
   return (
+    // Apply Draggable props here
     <div
-      ref={ref}
-      className={`flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded mb-2 bg-white dark:bg-gray-700 shadow-sm ${isDragging ? 'opacity-50 cursor-grabbing' : 'cursor-grab'}`}
+      ref={provided.innerRef}
+      {...provided.draggableProps}
+      className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 border border-gray-200 dark:border-gray-600 rounded mb-2 transition-shadow duration-200 ${
+        snapshot.isDragging
+          ? 'bg-blue-50 dark:bg-blue-900 shadow-lg ring-2 ring-blue-500' // Style when dragging
+          : 'bg-gray-100 dark:bg-gray-700 shadow-sm' // Default style
+      }`}
     >
-      <IconRenderer iconName="GripVertical" size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
-      <input
-        type="text"
-        placeholder="Link Text"
-        value={link.text}
-        onChange={handleTextChange}
-        className="flex-1 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm p-1 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
-      />
-      <input
-        type="text"
-        placeholder="URL (e.g., /about or https://...)"
-        value={link.url}
-        onChange={handleUrlChange}
-        className="flex-1 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm p-1 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
-      />
+      {/* Drag Handle - Apply dragHandleProps here */}
+      <div
+        {...provided.dragHandleProps}
+        className={`flex-shrink-0 self-center sm:self-auto p-1 cursor-grab text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200`}
+        
+        aria-label="Drag to reorder link"
+      >
+        <IconRenderer iconName="GripVertical" size={16} className="text-gray-400 dark:text-gray-500" />
+      </div>
+
+      {/* Inputs Container */}
+      <div className="flex flex-col sm:flex-row flex-grow gap-2">
+        <input
+          type="text"
+          placeholder="Link Text"
+          value={link.text}
+          onChange={handleTextChange}
+          className="flex-1 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm p-1 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+        />
+        <input
+          type="text"
+          placeholder="URL (e.g., /about or https://...)"
+          value={link.url}
+          onChange={handleUrlChange}
+          className="flex-1 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm p-1 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+        />
+      </div>
+
+      {/* Delete Button */}
       <button
         onClick={() => onDelete(listKey, index)}
-        className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-400"
+        className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-400 self-center sm:self-auto flex-shrink-0" // Center vertically in col layout
         aria-label="Delete link"
       >
-        <IconRenderer iconName="Trash2" size={16} className="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 flex-shrink-0"  /> 
+        <IconRenderer iconName="Trash2" size={16} className="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300" />
       </button>
     </div>
   );
@@ -106,7 +106,7 @@ interface EditableLinkListProps {
   listKey: 'nav_links' | 'footer_links';
   links: LinkItem[] | null | undefined;
   onChange: (key: 'nav_links' | 'footer_links', links: LinkItem[]) => void;
-  moveLinkHandler: (listKey: 'nav_links' | 'footer_links', dragIndex: number, hoverIndex: number) => void;
+  // Removed moveLinkHandler as it's handled by DragDropContext
   updateLinkHandler: (listKey: 'nav_links' | 'footer_links', index: number, updatedLink: LinkItem) => void;
   deleteLinkHandler: (listKey: 'nav_links' | 'footer_links', index: number) => void;
 }
@@ -115,7 +115,7 @@ const EditableLinkList: React.FC<EditableLinkListProps> = ({
   listKey,
   links = [],
   onChange,
-  moveLinkHandler,
+  // Removed moveLinkHandler prop
   updateLinkHandler,
   deleteLinkHandler
 }) => {
@@ -126,28 +126,44 @@ const EditableLinkList: React.FC<EditableLinkListProps> = ({
   };
 
   return (
-    // DndProvider is now wrapping the whole section
-    <div className="space-y-2">
-      {currentLinks.map((link, index) => (
-        <DraggableLinkItem
-          key={`${listKey}-${index}`} // More specific key
-          index={index}
-          link={link}
-          listKey={listKey}
-          moveLink={moveLinkHandler}
-          onUpdate={updateLinkHandler}
-          onDelete={deleteLinkHandler}
-        />
-      ))}
-      <button
-        onClick={handleAddLink}
-        className="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-      >
-        <IconRenderer iconName="Plus" size={16} className="mr-1" /> Add Link
-      </button>
-    </div>
+    // Wrap list items in Droppable and Draggable
+    <Droppable droppableId={listKey}>
+      {(providedDrop: DroppableProvided) => (
+        <div
+          {...providedDrop.droppableProps}
+          ref={providedDrop.innerRef}
+          className="space-y-2"
+        >
+          {currentLinks.map((link, index) => (
+            // Use a stable key if possible, e.g., link.id if available, otherwise index is fallback
+            <Draggable key={`${listKey}-${index}`} draggableId={`${listKey}-${index}`} index={index}>
+              {(providedDrag: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                <DraggableLinkItem
+                  index={index}
+                  link={link}
+                  listKey={listKey}
+                  onUpdate={updateLinkHandler}
+                  onDelete={deleteLinkHandler}
+                  provided={providedDrag} // Pass Draggable provided props
+                  snapshot={snapshot}     // Pass Draggable snapshot
+                  // Removed moveLink prop
+                />
+              )}
+            </Draggable>
+          ))}
+          {providedDrop.placeholder}
+          <button
+            onClick={handleAddLink}
+            className="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <IconRenderer iconName="Plus" size={16} className="mr-1" /> Add Link
+          </button>
+        </div>
+      )}
+    </Droppable>
   );
 };
+// Removed stray code block that was here
 
 
 // --- LinkManagementSection Component ---
@@ -174,19 +190,37 @@ const LinkManagementSection: React.FC<LinkManagementSectionProps> = ({
     handleLinkListChange(listKey, newLinks);
   };
 
-  const moveLink = useCallback((listKey: 'nav_links' | 'footer_links', dragIndex: number, hoverIndex: number) => {
-    const currentLinks = siteConfig[listKey] ?? [];
-    const draggedLink = currentLinks[dragIndex];
-    const updatedLinks = [...currentLinks];
-    updatedLinks.splice(dragIndex, 1);
-    updatedLinks.splice(hoverIndex, 0, draggedLink);
-    handleLinkListChange(listKey, updatedLinks);
-  }, [siteConfig, handleLinkListChange]);
+  // Removed the old moveLink useCallback
 
   const isSaveDisabled = isLoading || saveStatus.includes('Saving');
 
+  // --- react-beautiful-dnd onDragEnd Handler ---
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+
+    // Dropped outside the list or no movement
+    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+      return;
+    }
+
+    // Determine which list was affected (nav_links or footer_links)
+    const listKey = destination.droppableId as 'nav_links' | 'footer_links';
+    const currentLinks = siteConfig[listKey] ?? [];
+
+    // Perform the reorder
+    const items = Array.from(currentLinks);
+    const [reorderedItem] = items.splice(source.index, 1);
+    items.splice(destination.index, 0, reorderedItem);
+
+    // Update the state
+    handleLinkListChange(listKey, items);
+  };
+
+  // Removed backend selection logic
+
   return (
-    <DndProvider backend={HTML5Backend}>
+    // Wrap the entire section in DragDropContext
+    <DragDropContext onDragEnd={onDragEnd}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-gray-900 dark:text-gray-100">
 
         {/* Navigation Links Card */}
@@ -195,11 +229,12 @@ const LinkManagementSection: React.FC<LinkManagementSectionProps> = ({
             <IconRenderer iconName="Navigation" size={18} className="text-blue-500" />
             Navigation Links
           </h3>
+          {/* EditableLinkList now contains Droppable */}
           <EditableLinkList
             listKey="nav_links"
             links={siteConfig.nav_links}
             onChange={handleLinkListChange}
-            moveLinkHandler={moveLink}
+            // Removed moveLinkHandler
             updateLinkHandler={updateLink}
             deleteLinkHandler={deleteLink}
           />
@@ -227,11 +262,12 @@ const LinkManagementSection: React.FC<LinkManagementSectionProps> = ({
                 className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white" // Added text colors
              />
           </div>
+          {/* EditableLinkList now contains Droppable */}
           <EditableLinkList
             listKey="footer_links"
             links={siteConfig.footer_links}
             onChange={handleLinkListChange}
-            moveLinkHandler={moveLink}
+            // Removed moveLinkHandler
             updateLinkHandler={updateLink}
             deleteLinkHandler={deleteLink}
           />
@@ -263,7 +299,7 @@ const LinkManagementSection: React.FC<LinkManagementSectionProps> = ({
           </button>
         </div>
       </div>
-    </DndProvider>
+    </DragDropContext> // Close DragDropContext
   );
 };
 

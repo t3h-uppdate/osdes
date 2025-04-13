@@ -10,7 +10,7 @@ import {
   Keyboard, Mouse, Printer, Camera, Video, Mic, Users, Briefcase, Book, FileText,
   Folder, Link, Globe, Navigation as NavigationIcon, Package, Truck, ShoppingCart, CreditCard, DollarSign,
   TrendingUp, BarChart, PieChart, Activity, Menu, LogOut, Maximize2, Minimize2, Copy,
-  Star, AlertTriangle, Tag, ExternalLink, Code2, X, Sun, Moon, Home, CheckCircle, Navigation,
+  Star, AlertTriangle, Tag, ExternalLink, Code2, X, Sun, Moon, Home, Upload, CheckCircle, Navigation,
   // Icons added from AdminDashboard
   LayoutDashboard, FileEdit, Link2
   // Note: Renamed 'Navigation' to 'NavigationIcon' to avoid conflict with the component name
@@ -51,7 +51,7 @@ const IconMap: Record<string, React.ComponentType<any>> = {
   Keyboard, Mouse, Printer, Camera, Video, Mic, Users, Briefcase, Book, FileText,
   Folder, Link, Globe, NavigationIcon, Package, Truck, ShoppingCart, CreditCard, DollarSign,
   TrendingUp, BarChart, PieChart, Activity, Menu, LogOut, Maximize2, Minimize2, Copy,
-  Star, AlertTriangle, Tag, ExternalLink, Code2, CloseX: X, Sun, Moon, Home, Navigation, CheckCircle, // Renamed Lucide X to CloseX
+  Star, AlertTriangle, Tag, ExternalLink, Code2, CloseX: X, Sun, Moon, Home, Navigation, Upload, CheckCircle, // Renamed Lucide X to CloseX
   // Icons added from AdminDashboard
   LayoutDashboard, FileEdit, Link2,
   // Font Awesome (using original names as keys for consistency)

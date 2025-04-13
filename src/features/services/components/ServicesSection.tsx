@@ -1,32 +1,31 @@
 import React from 'react';
-// Remove direct icon imports
-import IconRenderer from '../../../components/common/IconRenderer'; // Import central renderer
-import { useFetchServices, ServiceItem } from '../hooks/useFetchServices'; // Import hook and type
+import IconRenderer from '../../../components/common/IconRenderer';
+import { useFetchServices, ServiceItem } from '../hooks/useFetchServices';
+// Import the hook to access site settings
+import { useSite } from '../../../contexts/SiteSettingsContext';
+// No props needed anymore as titles come from context
+interface ServicesSectionProps {}
 
-// Remove LucideIconComponents map and getIconComponent function
+const ServicesSection: React.FC<ServicesSectionProps> = () => {
+  // Fetch individual service items
+  const { services, isLoading: isLoadingServices, error: servicesError } = useFetchServices();
+  // Fetch site configuration (including section titles)
+  const { siteConfig, isLoading: isLoadingConfig } = useSite();
 
+  // Combine loading states
+  const isLoading = isLoadingServices || isLoadingConfig;
+  // Combine error states (prioritize service fetch error for now)
+  const error = servicesError; // || configError if siteConfig had an error state
 
-// Define props for the component - simplified
-interface ServicesSectionProps {
-  // isDarkMode: boolean; // Removed prop
-  // Removed props related to static/translated data:
-  // servicesTranslations, featuresTranslations, everythingYouNeedTranslation, language
-  // Add back any needed props like titles if they aren't fetched
-  sectionTitle?: string; // Example: Optional title prop
-  sectionSubtitle?: string; // Example: Optional subtitle prop
-}
+  // Determine titles, using defaults as fallbacks
+  const sectionTitle = siteConfig?.services_section_title || "Our Services";
+  const sectionSubtitle = siteConfig?.services_section_subtitle || "Everything you need";
 
-const ServicesSection: React.FC<ServicesSectionProps> = ({
-  // isDarkMode, // Removed from destructuring
-  sectionTitle = "Our Services", // Default title
-  sectionSubtitle = "Everything you need", // Default subtitle
-}) => {
-  const { services, isLoading, error } = useFetchServices(); // Use the hook
-
-  // Handle Loading State - Use dark: prefix
+  // Handle Combined Loading State
   if (isLoading) {
     return (
-      <div className="py-12 bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+      // Added min-h-[300px] for better loading appearance
+      <div className="py-12 bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300 min-h-[300px] flex items-center justify-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <IconRenderer iconName="Loader2" className="h-8 w-8 animate-spin mx-auto mb-2" />
           Loading services...

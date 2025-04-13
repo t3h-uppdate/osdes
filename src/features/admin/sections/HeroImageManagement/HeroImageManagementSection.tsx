@@ -137,38 +137,50 @@ const HeroImageManagementSection: React.FC = () => {
                 <p className="text-gray-500 dark:text-gray-400 italic px-3 py-2">No hero images added yet.</p>
               )}
               {managedImages.map((image, index) => (
-                // Use image_url for key and draggableId for stability across saves
-                <Draggable key={image.image_url} draggableId={image.image_url} index={index}>
+                // Use String(image.id) for key and draggableId for better stability
+                <Draggable key={String(image.id)} draggableId={String(image.id)} index={index}>
                   {(providedDraggable: DraggableProvided, snapshot: DraggableStateSnapshot) => (
                     <div
                       ref={providedDraggable.innerRef}
                       {...providedDraggable.draggableProps}
-                      // Apply conditional styling based on snapshot.isDragging
-                      className={`flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-md transition-shadow duration-200 ${
+                      // Responsive layout: flex-col on small, sm:flex-row on larger screens
+                      className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md transition-shadow duration-200 ${
                         snapshot.isDragging
                           ? 'bg-blue-50 dark:bg-blue-900 shadow-lg ring-2 ring-blue-500' // Styling when dragging
                           : 'bg-gray-100 dark:bg-gray-700 shadow-sm' // Default styling
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
+                      {/* Left side: Drag handle + Image + URL */}
+                      <div className="flex items-center gap-3 flex-grow">
+                        {/* Drag Handle */}
                         <button
                           {...providedDraggable.dragHandleProps}
-                           className="cursor-grab text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
-                           aria-label="Drag to reorder"
-                         >
-                           <IconRenderer iconName="GripVertical" size={20} />
-                         </button>
-                         <img src={image.image_url} alt={`Hero ${index + 1}`} className="w-16 h-10 object-cover rounded" />
-                        <span className="text-sm truncate max-w-xs text-gray-700 dark:text-gray-300">{image.image_url}</span>
+                          className="cursor-grab text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 flex-shrink-0 self-start sm:self-center" // Align handle nicely
+                          aria-label="Drag to reorder"
+                        >
+                          <IconRenderer iconName="GripVertical" size={20} />
+                        </button>
+                        {/* Image Preview */}
+                        <img
+                          src={image.image_url}
+                          alt={`Hero ${index + 1}`}
+                          className="w-16 h-10 object-cover rounded flex-shrink-0"
+                        />
+                        {/* URL Text (allow wrapping on mobile) */}
+                        <span className="text-sm text-gray-700 dark:text-gray-300 break-all min-w-0"> {/* Allow breaking words */}
+                          {image.image_url}
+                        </span>
                       </div>
+
+                      {/* Right side: Delete Button */}
                       <button
                         onClick={() => handleRemoveImage(image.id)}
-                         className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
-                         aria-label="Remove image"
-                       >
-                         <IconRenderer iconName="Trash2" size={18} />
-                       </button>
-                     </div>
+                        className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 flex-shrink-0 self-end sm:self-center" // Align button to end on mobile
+                        aria-label="Remove image"
+                      >
+                        <IconRenderer iconName="Trash2" size={18} />
+                      </button>
+                    </div>
                   )}
                 </Draggable>
               ))}

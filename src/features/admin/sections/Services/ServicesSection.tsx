@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
-// Remove direct icon imports
-import IconRenderer from '../../../../components/common/IconRenderer'; // Import central renderer
+import IconRenderer from '../../../../components/common/IconRenderer';
 import { useNotifications } from '../../../../contexts/NotificationContext';
 import { useServiceManagement } from './hooks/useServiceManagement';
 import { ServiceItem } from './types';
+// Import the hook for site config management
+import { useAdminData } from '../../hooks/useAdminData';
 
 // Define a type for the local editing state
 type LocalServiceState = Omit<ServiceItem, 'id' | 'is_published'> & { is_published: boolean }; // Add is_published
@@ -22,6 +23,7 @@ const commonServiceIcons = [
 
 
 const ServicesSection: React.FC = () => {
+  // Hook for managing individual service items
   const {
     services: servicesFromHook,
     isLoading: isHookLoading,
@@ -30,12 +32,24 @@ const ServicesSection: React.FC = () => {
     updateService,
     deleteService,
     toggleServiceStatus, // Import new function
-    moveService,         // Import new function
+    moveService,
   } = useServiceManagement();
+
+  // Hook for managing site-wide configuration (including section titles)
+  const {
+    siteConfig,
+    isLoading: isConfigLoading, // Renamed to avoid conflict
+    handleInputChange: handleConfigInputChange, // Renamed to avoid conflict
+    saveSiteConfig,
+    saveStatus: configSaveStatus, // Renamed to avoid conflict
+  } = useAdminData();
 
   const { requestConfirmation, showToast } = useNotifications();
   const [expandedItems, setExpandedItems] = useState<{ [key: string]: boolean }>({});
   const [localServiceData, setLocalServiceData] = useState<{ [key: string]: LocalServiceState }>({});
+
+  // Combine loading states
+  const isLoading = isHookLoading || isConfigLoading;
 
   // Effect to initialize or update local state
   useEffect(() => {
@@ -108,6 +122,22 @@ const ServicesSection: React.FC = () => {
     }
   }, [localServiceData, updateService, servicesFromHook]);
 
+  // --- Handlers for Section Title/Subtitle ---
+
+  // Use the generic handleInputChange from useAdminData for title/subtitle
+  const handleSectionTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleConfigInputChange(event); // Pass the event directly
+  };
+
+  // Save handler specifically for the section titles (calls saveSiteConfig)
+  const handleSaveSectionTitles = useCallback(() => {
+    // saveSiteConfig will save the entire current siteConfig state from useAdminData
+    saveSiteConfig();
+  }, [saveSiteConfig]);
+
+
+  // --- Handlers for Service Items ---
+
   // Handle toggling publish status
   const handleToggleStatus = useCallback((serviceId: string) => {
       const currentStatus = localServiceData[serviceId]?.is_published ?? false;
@@ -143,7 +173,8 @@ const ServicesSection: React.FC = () => {
   }, [deleteService, requestConfirmation, showToast]);
 
 
-  if (isHookLoading && servicesFromHook.length === 0) {
+  // Display loading indicator if either hook is loading initially
+  if (isLoading && servicesFromHook.length === 0 && !siteConfig?.services_section_title) {
     return (
       <div className="flex justify-center items-center p-6">
         <IconRenderer iconName="Loader2" className="h-8 w-8 animate-spin text-gray-500 dark:text-gray-400" />
@@ -163,24 +194,79 @@ const ServicesSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          onClick={handleAddNewServiceClick}
-          disabled={isHookLoading}
+      {/* Section Title/Subtitle Inputs */}
+      <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">Section Display</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="services_section_title" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+              Section Title
+            </label>
+            <input
+              type="text"
+              id="services_section_title"
+              name="services_section_title" // Name must match the key in SiteConfigData
+              value={siteConfig?.services_section_title || ''}
+              onChange={handleSectionTitleChange}
+              // onBlur={handleSaveSectionTitles} // Removed onBlur save
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+              placeholder="e.g., Our Services"
+              disabled={isLoading}
+            />
+          </div>
+          <div>
+            <label htmlFor="services_section_subtitle" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+              Section Subtitle
+            </label>
+            <input
+              type="text"
+              id="services_section_subtitle"
+              name="services_section_subtitle" // Name must match the key in SiteConfigData
+              value={siteConfig?.services_section_subtitle || ''}
+              onChange={handleSectionTitleChange}
+              // onBlur={handleSaveSectionTitles} // Removed onBlur save
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+              placeholder="e.g., Everything you need"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end items-center">
+           {configSaveStatus && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mr-4">{configSaveStatus}</p>
+           )}
+           <button
+             onClick={handleSaveSectionTitles}
+             disabled={isLoading || !!configSaveStatus} // Disable if loading or saving
+             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+             aria-label="Save section title and subtitle"
+           >
+             <IconRenderer iconName="Save" size={16} /> Save Changes
+           </button>
+        </div>
+      </div>
+
+      {/* Service Items Management */}
+      <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+        <div className="flex justify-between items-center mb-3 border-b border-gray-300 dark:border-gray-600 pb-2">
+          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">
+            Service Items ({servicesFromHook.length})
+          </h3>
+          <button
+            onClick={handleAddNewServiceClick}
+            disabled={isLoading} // Use combined loading state
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Add new service item"
         >
           <IconRenderer iconName="PlusSquare" size={16} /> Add New Service
-        </button>
-      </div>
+          </button>
+        </div>
 
-      <div className="space-y-3">
-        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 border-b border-gray-300 dark:border-gray-600 pb-2 mb-3">
-          Service Items ({servicesFromHook.length})
-        </h3>
-        {servicesFromHook.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 italic">No services added yet. Click "Add New Service" to begin.</p>
-        ) : (
+        {/* Service Items List */}
+        <div className="space-y-3">
+          {servicesFromHook.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 italic">No services added yet. Click "Add New Service" to begin.</p>
+          ) : (
           servicesFromHook.map((service, index) => { // Add index
             const isExpanded = expandedItems[service.id] || false;
             const currentLocalData = localServiceData[service.id] || { title: '', description: '', icon: '', sort_order: 0, is_published: false };
@@ -343,9 +429,10 @@ const ServicesSection: React.FC = () => {
                 )}
               </div>
             );
-          })
-        )}
-      </div>
+            })
+          )}
+        </div> {/* Close space-y-3 for items list */}
+      </div> {/* Close the wrapping div for Service Items Management */}
     </div>
   );
 };

@@ -17,6 +17,9 @@ export interface SiteConfigData {
   footer_links?: { text: string; url: string }[] | null; // Added for footer links
   footer_links_title?: string | null; // New field for the footer links title
   blogTitle?: string | null; // Add the blog title field
+  projects_section_title?: string | null; // Title for the projects section
+  services_section_title?: string | null; // Title for the services section
+  services_section_subtitle?: string | null; // Subtitle for the services section
   // Add other non-translatable config fields here if any (e.g., theme)
   updated_at?: string;
 }
@@ -30,6 +33,9 @@ const defaultSiteConfig: SiteConfigData = {
   footer_links: [], // Default to empty array
   footer_links_title: 'Quick Links', // Default title
   blogTitle: 'Our Blog', // Default blog title
+  projects_section_title: 'Projects', // Default projects title
+  services_section_title: 'Our Services', // Default services title
+  services_section_subtitle: 'Everything you need', // Default services subtitle
 };
 
 // Define type for the translations data structure (key-value pairs)

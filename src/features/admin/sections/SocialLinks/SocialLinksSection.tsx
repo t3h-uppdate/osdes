@@ -193,8 +193,11 @@ const SocialLinksSection: React.FC = () => {
 
   // --- Reordering Handler ---
   const handleMove = async (index: number, direction: 'up' | 'down') => {
+    console.log(`handleMove called: index=${index}, direction=${direction}`); // Log entry
+
     if (!supabase) {
       showToast("Error: Supabase client not initialized.", 'error');
+      console.error("handleMove error: Supabase client not initialized.");
       return;
     }
 
@@ -203,46 +206,61 @@ const SocialLinksSection: React.FC = () => {
 
     if (swapIndex < 0 || swapIndex >= links.length) {
       console.warn("Cannot move item beyond list boundaries.");
+      console.warn("Cannot move item beyond list boundaries.");
       return;
     }
 
     const linkToSwapWith = links[swapIndex];
+    console.log('Link to move:', linkToMove);
+    console.log('Link to swap with:', linkToSwapWith);
 
     // Optimistic UI update: Swap items locally first
     const newLinks = [...links];
     newLinks[index] = { ...linkToSwapWith, order: linkToMove.order }; // Assign original order of item being moved
     newLinks[swapIndex] = { ...linkToMove, order: linkToSwapWith.order }; // Assign original order of item being swapped with
+
+    console.log('Optimistic state update (before setLinks):', newLinks);
     setLinks(newLinks); // Update state immediately
 
     // Update database
     try {
-      // Update the item being moved to the target position's original order
+      console.log(`Updating DB: Moving item ID ${linkToMove.id} to order ${linkToSwapWith.order}`);
       const { error: error1 } = await supabase
         .from(SOCIAL_LINKS_TABLE)
         .update({ sort_order: linkToSwapWith.order }) // Use the original order of the item it's swapping with
         .eq('id', linkToMove.id);
 
-      if (error1) throw error1;
+      if (error1) {
+        console.error('Supabase update error (1):', error1);
+        throw error1;
+      }
+      console.log(`DB Update 1 successful for ID ${linkToMove.id}`);
 
-      // Update the item being swapped with to the moved item's original order
+      console.log(`Updating DB: Moving item ID ${linkToSwapWith.id} to order ${linkToMove.order}`);
       const { error: error2 } = await supabase
         .from(SOCIAL_LINKS_TABLE)
         .update({ sort_order: linkToMove.order }) // Use the original order of the item that was moved
         .eq('id', linkToSwapWith.id);
 
-      if (error2) throw error2;
+      if (error2) {
+        console.error('Supabase update error (2):', error2);
+        throw error2;
+      }
+      console.log(`DB Update 2 successful for ID ${linkToSwapWith.id}`);
 
       showToast('Link order updated successfully!', 'success');
+      console.log('Link order update successful.');
       // No need to fetch again, optimistic update is usually sufficient
       // If strict consistency is needed, uncomment the fetch:
       // await fetchLinks();
     } catch (err: any) {
-      console.error("Error updating link order:", err);
+      console.error("Error updating link order in DB:", err);
       showToast("Failed to update link order. Reverting changes.", 'error');
       // Revert optimistic update on error
-      setLinks([...links]); // Restore original links array
+      console.log('Reverting optimistic state update due to DB error.');
+      setLinks([...links]); // Restore original links array from before the optimistic update
       // Or fetchLinks() to get the definite state from DB
-      await fetchLinks();
+      // await fetchLinks(); // Consider fetching if revert doesn't work reliably
     }
    };
 
@@ -332,23 +350,24 @@ const SocialLinksSection: React.FC = () => {
 
       {/* --- Title Section --- */}
       <div className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700/50">
-        <label htmlFor="socialLinksTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor="socialLinksTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"> {/* Increased bottom margin */}
           Section Title
         </label>
-        <div className="flex items-center gap-3">
+        {/* Flex container for input and button, stacks vertically on small screens */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
           <input
             type="text"
             id="socialLinksTitle"
             value={title}
             onChange={handleTitleChange}
             disabled={isTranslationsLoading || isSavingTitle}
-            className="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50"
+            className="w-full md:flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50" // Added w-full for small screens
             placeholder="e.g., Follow Us"
           />
           <button
             onClick={handleSaveTitle}
             disabled={!isTitleDirty || isSavingTitle || isTranslationsLoading}
-            className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800"
+            className="w-full md:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800" // Added w-full md:w-auto
           >
             {isSavingTitle ? <LoadingSpinner size={16} color="text-white" /> : 'Save Title'}
           </button>
@@ -389,18 +408,20 @@ const SocialLinksSection: React.FC = () => {
       {isAdding && (
         <div className="mb-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700/50">
           <h4 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-100">Add New Link</h4>
-          <div className="flex items-center gap-3 mb-3">
+          {/* Flex container for inputs, stacks vertically on small screens */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 mb-3">
              {/* Platform Select Dropdown */}
-             <div className="flex items-center gap-1 flex-shrink-0 mr-2">
+             {/* Adjusted width for small screens */}
+             <div className="flex items-center gap-1 w-full md:w-auto md:flex-shrink-0 md:mr-2">
                <IconRenderer iconName={newLinkData.icon || 'HelpCircle'} size={20} className="text-gray-500 dark:text-gray-400" />
                <select
                  name="name" // Value is the platform name
                  value={newLinkData.name || ''}
                  onChange={handleNewPlatformChange} // Use platform change handler
-                 className="p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                 className="flex-grow p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500" // Use flex-grow to fill space
                  aria-label="Select Platform"
                >
-                 {/* <option value="" disabled>Select Platform</option> */} {/* Can be removed if state initializes */}
+                 {/* <option value="" disabled>Select Platform</option> */}
                  {socialPlatforms.map(platform => (
                    <option key={platform.name} value={platform.name} className="bg-white dark:bg-gray-700">
                      {platform.name}
@@ -409,7 +430,7 @@ const SocialLinksSection: React.FC = () => {
                </select>
              </div>
 
-             {/* URL Input */}
+             {/* URL Input - Adjusted width for small screens */}
              <input
                type="text"
                name="url"
@@ -420,15 +441,16 @@ const SocialLinksSection: React.FC = () => {
                }
                value={newLinkData.url || ''}
                onChange={handleNewUrlChange} // Use URL change handler
-               className="flex-1 p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+               className="w-full md:flex-1 p-1.5 rounded border-gray-300 dark:border-gray-500 shadow-sm sm:text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500" // Added w-full md:flex-1
              />
           </div>
-          <div className="flex justify-end gap-3">
+          {/* Button container, stacks buttons on small screens */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
              <button
                onClick={handleCancelAdd}
                type="button"
                disabled={isSavingNewLink}
-               className="px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
+               className="w-full sm:w-auto px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500" // Added w-full sm:w-auto
              >
                Cancel
              </button>
@@ -441,7 +463,7 @@ const SocialLinksSection: React.FC = () => {
                  !newLinkData.url ||
                  (newLinkData.url === findPlatform(newLinkData.name)?.baseUrl && newLinkData.url !== 'mailto:')
                }
-               className="inline-flex items-center px-4 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+               className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50" // Added w-full sm:w-auto and justify-center
              >
                {isSavingNewLink ? <LoadingSpinner size={18} className="mr-2" /> : <IconRenderer iconName="PlusCircle" size={18} className="mr-1.5" />}
                {isSavingNewLink ? 'Adding...' : 'Add Link'}
