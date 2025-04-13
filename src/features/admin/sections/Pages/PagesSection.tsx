@@ -1,18 +1,21 @@
-import React from 'react'; // Removed useState, useEffect imports as they are no longer needed here for blog title
+import React, { useState, useMemo, useCallback } from 'react'; // Added useState, useMemo, useCallback
 import { usePageManagement } from './hooks/usePageManagement'; // Corrected path
 import PageForm from './components/PageForm'; // Corrected path
 import PageListItem from './components/PageListItem'; // Corrected path
+import { Page } from './types'; // Import Page type
 import { useAdminData } from '../../hooks/useAdminData'; // Import useAdminData
 import { useNotifications } from '../../../../contexts/NotificationContext'; // Import useNotifications for feedback
-// Removed sorting icons import
+// Type for filtering publish status
+type PublishFilter = 'all' | 'published' | 'draft';
+// Type for page category tabs
+type PageCategory = 'blog' | 'original';
 
-
-// --- PagesTab Component ---
+// --- PagesSection Component ---
 const PagesSection: React.FC = () => {
-  // Use the custom hook to manage state and logic
+  // Use the updated hook - gets all pages and core handlers
   const {
-    pages,
-    isLoading,
+    allPages, // Renamed from pages
+    isLoading: isHookLoading, // Renamed to avoid conflict with component loading state
     isEditing,
     handleFormSubmit,
     handleDelete,
@@ -21,13 +24,7 @@ const PagesSection: React.FC = () => {
     handleTogglePublish,
     handleMoveUp,
     handleMoveDown,
-    filter,
-    handleFilterChange,
-    currentPage, // Get pagination state
-    totalPages, // Get pagination state
-    goToNextPage, // Get pagination handlers
-    goToPreviousPage, // Get pagination handlers
-  } = usePageManagement(); // Keep page management logic
+  } = usePageManagement();
 
   // --- Use Admin Data for Blog Title ---
   const {
@@ -58,6 +55,61 @@ const PagesSection: React.FC = () => {
     // saveSiteConfig already shows toasts on success/error via useNotifications
   };
   // --- End Use Admin Data ---
+
+  // --- Component State for Tabs, Filtering, Pagination ---
+  const [activeTab, setActiveTab] = useState<PageCategory>('blog'); // 'blog' or 'original'
+  const [publishFilter, setPublishFilter] = useState<PublishFilter>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Or make this configurable
+
+  // Reset pagination and filter when tab changes
+  const handleTabChange = (tab: PageCategory) => {
+    setActiveTab(tab);
+    setPublishFilter('all');
+    setCurrentPage(1);
+  };
+
+  const handlePublishFilterChange = (newFilter: PublishFilter) => {
+    setPublishFilter(newFilter);
+    setCurrentPage(1); // Reset page when filter changes
+  };
+
+  // --- Filtering Logic (based on active tab and publish filter) ---
+  const filteredPages = useMemo(() => {
+    const categoryFiltered = allPages.filter(page =>
+      activeTab === 'original' ? page.is_original_page : !page.is_original_page
+    );
+
+    if (publishFilter === 'all') {
+      return categoryFiltered;
+    }
+    const targetStatus = publishFilter === 'published';
+    return categoryFiltered.filter(page => (page.is_published ?? false) === targetStatus);
+  }, [allPages, activeTab, publishFilter]);
+
+  // --- Pagination Logic ---
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredPages.length / itemsPerPage);
+  }, [filteredPages.length, itemsPerPage]);
+
+  const paginatedPages = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredPages.slice(startIndex, endIndex);
+  }, [filteredPages, currentPage, itemsPerPage]);
+
+  const goToNextPage = useCallback(() => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  }, [totalPages]);
+
+  const goToPreviousPage = useCallback(() => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  }, []);
+  // --- End Component State ---
+
+
+  // Determine loading state based on hook and admin data hook
+  const isLoading = isHookLoading || isAdminDataLoading;
 
   return (
     <div className="space-y-6">
@@ -96,24 +148,46 @@ const PagesSection: React.FC = () => {
       {/* Render PageForm */}
       <PageForm
         key={isEditing || 'add'} // Force re-render/reset when switching between add/edit
-        initialData={isEditing ? pages.find(p => p.id === isEditing) : undefined}
+        initialData={isEditing ? allPages.find(p => p.id === isEditing) : undefined} // Use allPages
         onSubmit={handleFormSubmit}
         onCancel={resetForm} // Pass resetForm as the cancel handler
-        isLoading={isLoading}
+        isLoading={isLoading} // Use combined loading state
       />
 
-      {/* Pages List */}
+      {/* --- Tabs and Pages List --- */}
       <div className="mt-6 border dark:border-gray-600 rounded shadow-sm bg-white dark:bg-gray-800">
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="-mb-px flex space-x-8 px-4" aria-label="Tabs">
+            {(['blog', 'original'] as PageCategory[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab
+                    ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'
+                }`}
+              >
+                {tab === 'blog' ? 'Blog Pages' : 'Original Pages'}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* List Header (Title and Publish Filter) */}
         <div className="flex justify-between items-center p-4 border-b dark:border-gray-600">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Existing Pages</h3>
-          {/* Filter Buttons */}
+           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+             {activeTab === 'blog' ? 'Blog Pages' : 'Original Pages'}
+           </h3>
+          {/* Publish Filter Buttons */}
           <div className="flex space-x-2">
-            {(['all', 'published', 'draft'] as const).map((filterOption) => (
+            {(['all', 'published', 'draft'] as PublishFilter[]).map((filterOption) => (
               <button
                 key={filterOption}
-                onClick={() => handleFilterChange(filterOption)}
+                onClick={() => handlePublishFilterChange(filterOption)}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                  filter === filterOption
+                  publishFilter === filterOption // Use component state 'publishFilter'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
                 }`}
@@ -134,24 +208,28 @@ const PagesSection: React.FC = () => {
           <div className="col-span-2 text-right">Actions</div>
         </div>
 
-        {/* Page Items */}
-        {isLoading && !pages.length ? (
+        {/* Page Items - Use paginatedPages */}
+        {isLoading && !paginatedPages.length ? ( // Check paginatedPages length
           <p className="p-4 text-gray-500 dark:text-gray-400">Loading pages...</p>
-        ) : pages.length === 0 ? (
-          <p className="p-4 text-gray-500 dark:text-gray-400">No pages found.</p>
+        ) : paginatedPages.length === 0 ? ( // Check paginatedPages length
+          <p className="p-4 text-gray-500 dark:text-gray-400">No {activeTab === 'blog' ? 'blog' : 'original'} pages found matching the current filter.</p>
         ) : (
           <ul className="divide-y divide-gray-200 dark:divide-gray-600">
-            {pages.map((page, index) => (
+            {/* Map over paginatedPages */}
+            {paginatedPages.map((page, index) => (
               <PageListItem
                 key={page.id}
                 page={page}
-                index={index}
-                pageCount={pages.length}
-                isLoading={isLoading}
+                // Index and pageCount should reflect the current view (paginated)
+                // However, move handlers need the context of the *full* list for the category
+                // Let's pass the full filtered list count for move logic bounds
+                index={index + (currentPage - 1) * itemsPerPage} // Calculate overall index in filtered list
+                pageCount={filteredPages.length} // Use count of the filtered list for bounds
+                isLoading={isLoading} // Use combined loading state
                 onEdit={startEditing}
                 onDelete={handleDelete}
-                onMoveUp={handleMoveUp} // Pass move handlers
-                onMoveDown={handleMoveDown} // Pass move handlers
+                onMoveUp={handleMoveUp}
+                onMoveDown={handleMoveDown}
                 onTogglePublish={handleTogglePublish}
               />
             ))}

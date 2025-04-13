@@ -6,18 +6,14 @@ import { useNotifications } from '../../../../../contexts/NotificationContext'; 
 // Define Supabase table name
 const PAGES_TABLE = 'pages';
 
-// Type for filtering
-type PageFilter = 'all' | 'published' | 'draft';
-
 // --- usePageManagement Hook ---
+// This hook now focuses on fetching all pages and providing CRUD/reordering logic.
+// Filtering and pagination will be handled in the component.
 export const usePageManagement = () => {
   const { showToast, requestConfirmation } = useNotifications();
-  const [pages, setPages] = useState<Page[]>([]); // Raw pages, ordered by 'order'
+  const [allPages, setAllPages] = useState<Page[]>([]); // Store all fetched pages
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null); // Keep track of the ID being edited
-  const [filter, setFilter] = useState<PageFilter>('all');
-  const [currentPage, setCurrentPage] = useState(1); // Pagination state
-  const [itemsPerPage] = useState(10); // Items per page (could be made configurable)
 
   const fetchPages = useCallback(async () => {
     if (!supabase) {
@@ -30,7 +26,7 @@ export const usePageManagement = () => {
       // Fetch pages ordered by the 'order' column for manual sorting
       const { data, error } = await supabase
         .from(PAGES_TABLE)
-        .select('*')
+        .select('*, is_original_page') // Ensure is_original_page is selected
         .order('order', { ascending: true, nullsFirst: false }); // Order by manual order, nulls last
 
       if (error) throw error;
@@ -45,8 +41,9 @@ export const usePageManagement = () => {
         created_at: item.created_at,
         updated_at: item.updated_at, // Map updated_at
         order: item.order, // Map the order field
+        is_original_page: item.is_original_page, // Map the new field
       } as Page)) || [];
-      setPages(pagesList); // Set pages based on fetched order
+      setAllPages(pagesList); // Set all pages based on fetched order
     } catch (err: any) {
       console.error("Error fetching pages from Supabase:", err);
       showToast('Failed to load pages. Check console for details.', 'error');
@@ -63,8 +60,8 @@ export const usePageManagement = () => {
     setIsEditing(null);
   }, []);
 
-  // Form data likely won't include id or order
-  const handleFormSubmit = useCallback(async (formData: Omit<Page, 'id' | 'order'>) => {
+  // Form data likely won't include id or order, but should include is_original_page
+  const handleFormSubmit = useCallback(async (formData: Omit<Page, 'id' | 'order' | 'created_at' | 'updated_at'>) => {
     setIsLoading(true);
     if (!supabase) {
       showToast("Error: Supabase client is not initialized.", 'error');
@@ -79,6 +76,7 @@ export const usePageManagement = () => {
         slug: formData.slug,
         content: formData.content,
         is_published: formData.is_published ?? false, // Default to false if not set
+        is_original_page: formData.is_original_page ?? false, // Default to false if not set
     };
 
     try {
@@ -91,11 +89,11 @@ export const usePageManagement = () => {
         if (error) throw error;
         showToast('Page updated successfully!', 'success');
       } else {
-        // Insert new page
-        // Calculate the next order number based on existing pages
-        const maxOrder = pages.reduce((max, p) => Math.max(max, p.order ?? 0), 0);
-        const newOrder = maxOrder + 1;
-        const dataToInsert = { ...pageData, order: newOrder };
+      // Insert new page
+      // Calculate the next order number based on existing pages
+      const maxOrder = allPages.reduce((max, p) => Math.max(max, p.order ?? 0), 0); // Use allPages
+      const newOrder = maxOrder + 1;
+      const dataToInsert = { ...pageData, order: newOrder };
 
         const { error } = await supabase
           .from(PAGES_TABLE)
@@ -119,7 +117,7 @@ export const usePageManagement = () => {
         showToast("Cannot delete page: Invalid ID.", 'error');
         return;
     }
-    const pageTitle = pages.find(p => p.id === id)?.title || id;
+    const pageTitle = allPages.find(p => p.id === id)?.title || id; // Use allPages
     requestConfirmation({
       message: `Are you sure you want to delete the page "${pageTitle}"?\nThis action cannot be undone.`,
       onConfirm: async () => {
@@ -151,7 +149,7 @@ export const usePageManagement = () => {
       confirmText: 'Delete Page',
       title: 'Confirm Deletion'
     });
-  }, [supabase, pages, isEditing, showToast, requestConfirmation, fetchPages, resetForm]);
+  }, [supabase, allPages, isEditing, showToast, requestConfirmation, fetchPages, resetForm]); // Use allPages
 
   const startEditing = useCallback((page: Page) => {
     if (!page.id) {
@@ -161,49 +159,11 @@ export const usePageManagement = () => {
     setIsEditing(page.id);
   }, [showToast]);
 
-  // Removed sorting logic
-
-  // --- Filtering Logic ---
-  const filteredPages = useMemo(() => {
-    if (filter === 'all') {
-      return pages;
-    }
-    const targetStatus = filter === 'published';
-    return pages.filter(page => (page.is_published ?? false) === targetStatus);
-  }, [pages, filter]);
-
-  // --- Pagination Logic ---
-  const totalPages = useMemo(() => {
-    return Math.ceil(filteredPages.length / itemsPerPage);
-  }, [filteredPages.length, itemsPerPage]);
-
-  const paginatedPages = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredPages.slice(startIndex, endIndex);
-  }, [filteredPages, currentPage, itemsPerPage]);
-
-  const goToPage = useCallback((pageNumber: number) => {
-    setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
-  }, [totalPages]);
-
-  const goToNextPage = useCallback(() => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  }, [totalPages]);
-
-  const goToPreviousPage = useCallback(() => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  }, []);
-
-  const handleFilterChange = useCallback((newFilter: PageFilter) => {
-    setFilter(newFilter);
-    setCurrentPage(1); // Reset to first page on filter change
-  }, []);
+  // Removed sorting, filtering, and pagination logic - will be handled in component
 
 
   // --- Reordering Logic ---
-  // Note: Reordering operates on the *raw* pages state before filtering/pagination
-  // Note: Reordering operates on the *raw* pages state before filtering
+  // Operates on the full list (allPages) and updates DB order directly
   const updatePageOrder = useCallback(async (pageId: string, newOrder: number) => {
     if (!supabase) {
       showToast("Error: Supabase client is not initialized.", 'error');
@@ -213,24 +173,24 @@ export const usePageManagement = () => {
   }, [supabase, showToast]); // Added showToast dependency
 
   const handleMove = useCallback(async (pageId: string, direction: 'up' | 'down') => {
-    // Find the actual index in the full 'pages' array
-    const index = pages.findIndex(p => p.id === pageId);
+    // Find the actual index in the full 'allPages' array
+    const index = allPages.findIndex(p => p.id === pageId); // Use allPages
     if (index === -1) {
-      console.error("Cannot move page: ID not found in the current list.", { pageId });
+      console.error("Cannot move page: ID not found in the full list.", { pageId }); // Updated error message
       showToast("Error: Could not find the page to move.", 'error');
       return;
     }
 
-    const pageToMove = pages[index];
+    const pageToMove = allPages[index]; // Use allPages
     const swapIndex = direction === 'up' ? index - 1 : index + 1;
 
-    // Check bounds using the full pages array length
-    if (swapIndex < 0 || swapIndex >= pages.length) {
-      console.warn("Invalid move operation: Out of bounds.", { index, direction, pageCount: pages.length });
+    // Check bounds using the full allPages array length
+    if (swapIndex < 0 || swapIndex >= allPages.length) { // Use allPages.length
+      console.warn("Invalid move operation: Out of bounds.", { index, direction, pageCount: allPages.length }); // Use allPages.length
       return; // Cannot move outside bounds
     }
 
-    const pageToSwapWith = pages[swapIndex];
+    const pageToSwapWith = allPages[swapIndex]; // Use allPages
 
     // Ensure both pages and their orders are valid before proceeding
     if (!pageToMove?.id || pageToMove.order === undefined || pageToMove.order === null ||
@@ -265,7 +225,7 @@ export const usePageManagement = () => {
       setIsLoading(false); // Ensure loading stops on error
     }
     // fetchPages sets loading to false on success
-  }, [pages, updatePageOrder, showToast, fetchPages]); // Added dependencies
+  }, [allPages, updatePageOrder, showToast, fetchPages]); // Use allPages
 
   // Update handlers to accept pageId
   const handleMoveUp = useCallback((pageId: string) => handleMove(pageId, 'up'), [handleMove]);
@@ -285,7 +245,7 @@ export const usePageManagement = () => {
 
     const newState = !currentState;
     const actionText = newState ? 'Publishing' : 'Unpublishing';
-    const pageTitle = pages.find(p => p.id === id)?.title || id;
+    const pageTitle = allPages.find(p => p.id === id)?.title || id; // Use allPages
 
     setIsLoading(true);
     try {
@@ -304,17 +264,14 @@ export const usePageManagement = () => {
       setIsLoading(false); // Ensure loading stops on error
     }
     // fetchPages will set loading to false on success/failure
-  }, [supabase, pages, showToast, fetchPages]);
+  }, [supabase, allPages, showToast, fetchPages]); // Use allPages
 
 
   return {
-    pages: paginatedPages, // Return paginated subset of filtered pages
+    allPages, // Return the raw list of all pages
     isLoading,
     isEditing,
-    filter,
-    currentPage, // Export pagination state
-    totalPages, // Export pagination state
-    // fetchPages, // Not needed externally
+    // Removed filter, currentPage, totalPages, paginatedPages, filter/pagination handlers
     handleFormSubmit,
     handleDelete,
     startEditing,
@@ -322,9 +279,6 @@ export const usePageManagement = () => {
     handleTogglePublish,
     handleMoveUp,
     handleMoveDown,
-    handleFilterChange,
-    goToPage, // Export pagination handlers
-    goToNextPage, // Export pagination handlers
-    goToPreviousPage, // Export pagination handlers
+    // fetchPages, // Not typically needed externally if useEffect runs it
   };
 };

@@ -5,8 +5,9 @@ import { useNotifications } from '../../../../../contexts/NotificationContext'; 
 
 // --- Types ---
 interface PageFormProps {
-  initialData?: Omit<Page, 'id' | 'order'> & { id?: string; order?: number }; // Allow optional id/order for editing
-  onSubmit: (data: Omit<Page, 'id'>) => Promise<void>;
+  // Include is_original_page in initialData and onSubmit data
+  initialData?: Omit<Page, 'created_at' | 'updated_at'>; // Allow optional fields for editing
+  onSubmit: (data: Omit<Page, 'id' | 'order' | 'created_at' | 'updated_at'>) => Promise<void>;
   onCancel?: () => void; // Optional cancel action
   isLoading: boolean;
 }
@@ -16,6 +17,7 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
   const [pageTitle, setPageTitle] = useState(initialData?.title || '');
   const [pageSlug, setPageSlug] = useState(initialData?.slug || '');
   const [pageContent, setPageContent] = useState(initialData?.content || '');
+  const [isOriginalPage, setIsOriginalPage] = useState(initialData?.is_original_page || false); // State for the checkbox
   const { showToast } = useNotifications();
 
   useEffect(() => {
@@ -23,6 +25,7 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
     setPageTitle(initialData?.title || '');
     setPageSlug(initialData?.slug || '');
     setPageContent(initialData?.content || '');
+    setIsOriginalPage(initialData?.is_original_page || false); // Reset checkbox state
   }, [initialData]);
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,14 +38,16 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
       showToast("Title, Slug, and Content are required.", 'error');
       return;
     }
-    // Construct data, order will be handled by the parent component logic
-    const pageData: Omit<Page, 'id' | 'order'> = {
+    // Construct data, including the new flag
+    const pageData: Omit<Page, 'id' | 'order' | 'created_at' | 'updated_at'> = {
       title: pageTitle,
       slug: pageSlug,
       content: pageContent,
+      is_original_page: isOriginalPage, // Include the checkbox state
+      is_published: initialData?.is_published ?? false, // Preserve existing published state or default to false for new pages
     };
-    // Pass only the core data up, parent decides order and if it's add/update
-    onSubmit(pageData as Omit<Page, 'id'>); // Cast needed as parent adds 'order'
+    // Pass the data up
+    onSubmit(pageData);
   };
 
   return (
@@ -73,6 +78,20 @@ const PageForm: React.FC<PageFormProps> = ({ initialData, onSubmit, onCancel, is
           pattern="^[a-z0-9-]+$"
           title="Slug can only contain lowercase letters, numbers, and hyphens."
         />
+      </div>
+      {/* Checkbox for Is Original Page */}
+      <div className="flex items-center">
+        <input
+          id="isOriginalPage"
+          name="isOriginalPage"
+          type="checkbox"
+          checked={isOriginalPage}
+          onChange={(e) => setIsOriginalPage(e.target.checked)}
+          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:focus:ring-offset-gray-800"
+        />
+        <label htmlFor="isOriginalPage" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+          Original Page (e.g., Privacy Policy, Terms) - Won't show in Blog section
+        </label>
       </div>
       {/* Apply dark mode label color. Quill editor styling might need theme prop or CSS overrides */}
       <div className="relative quill-editor-wrapper">

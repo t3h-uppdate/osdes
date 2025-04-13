@@ -35,6 +35,7 @@ export const useDynamicPages = () => {
           .from(PAGES_TABLE)
           .select('*') // Select all columns
           .eq('is_published', true) // Only fetch published pages
+          .eq('is_original_page', false) // Only fetch blog pages (not original pages)
           .order('order', { ascending: true, nullsFirst: false }); // Order by manual order for public site
 
         if (error) throw error;

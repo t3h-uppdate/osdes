@@ -6,6 +6,7 @@ export interface Page {
   content: string; // Page content (e.g., Markdown, HTML)
   order?: number; // Make order optional as we sort by created_at now
   is_published?: boolean; // Add is_published if it's part of the page data model
+  is_original_page?: boolean; // Distinguishes original site pages (e.g., Privacy) from blog posts
   created_at?: string; // Add creation timestamp
   updated_at?: string; // Add update timestamp
 }
